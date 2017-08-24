@@ -1,0 +1,61 @@
+<html>
+<head>
+  <title>Makeroid Starter Connection Test</title>
+  <style>
+  #yes { color: #679800}
+  #no { color: #8c0303}
+  </style>
+<script type="text/javascript">
+var ping = function() {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+          var result = JSON.parse(this.response);
+          if (result.status == "OK") {
+              document.getElementById("status").innerHTML="<h2 id='yes'>YES, Makeroid Starter is running!</h2>";
+            } else {
+              document.getElementById("status").innerHTML="<h2 id='no'>An error occurred!</h2>";
+            }
+        isUSB();
+        return;
+      } else {
+        document.getElementById("status").innerHTML="<h2 id='no'>NO, Makeroid Starter is not running! <br><br> Please make sure the aiStarter application is running.</h2>";
+        return;
+      }
+    }
+    xmlHttp.open('GET', 'http://127.0.0.1:8004/ping/', true);
+    xmlHttp.send();
+  }
+
+var isUSB = function() {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+          var result = JSON.parse(this.response);
+          if (result.status == "OK") {
+              document.getElementById("isphone").innerHTML="<h2 id='yes'>YES, your phone is connected!</h2>";
+            } else {
+              document.getElementById("isphone").innerHTML="<h2 id='no'>NO, your phone is not connected via USB!</h2>";
+            }
+      } else {
+        document.getElementById("isphone").innerHTML="<h2 id='no'>No, your phone is not connected via USB!</h2>";
+        return;
+      }
+    }
+    xmlHttp.open('GET', 'http://127.0.0.1:8004/utest/', true);
+    xmlHttp.send();
+  }
+
+  window.onload = ping;
+</script>
+</head>
+<body>
+  <h1>Makeroid Starter Connection Test</h1>
+  <p>
+  <h1>Is Makeroid Starter running?</h1>
+  <div id=status>Please Wait...</div>
+  <h1>Is your phone connected via USB?</h1>
+  <div id=isphone>Please Wait...</div>
+</p>
+</body>
+</html>
