@@ -18,12 +18,12 @@
             if (result.status == "OK") {
                 document.getElementById("status").innerHTML="<h4 id='yes'>YES, Makeroid Starter is running!</h4><br><h2>Is your phone connected via USB?</h2><h4 id='isphone'>Please Wait...</h4>";
               } else {
-                document.getElementById("status").innerHTML="<h4 id='no'>An error occurred</h4>";
+                document.getElementById("status").innerHTML="<style>header{background:#F44336;}hr.star-light:after{background-color:#F44336;}</style><h4 id='no'>An error occurred</h4>";
               }
           isUSB();
           return;
         } else {
-          document.getElementById("status").innerHTML="<h4 id='no'>NO, Makeroid Starter is not running<br><br><i>Please make sure the Makeroid Statrter application is running</i></h4>";
+          document.getElementById("status").innerHTML="<style> header{background:#F44336;}hr.star-light:after{background-color:#F44336;}</style><h4 id='no'>NO, Makeroid Starter is not running<br><br><i>Please make sure the Makeroid Statrter application is running</i></h4>";
           return;
         }
       }
@@ -36,12 +36,12 @@
           if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
             var result = JSON.parse(this.response);
             if (result.status == "OK") {
-                document.getElementById("isphone").innerHTML="<style>header{background-color:#4CAF50;}hr.star-light:after{background-color:#4CAF50;}</style><h4 id='yes'>YES, your phone is connected!</h4>";
+                document.getElementById("isphone").innerHTML="<style>header{background:#4CAF50;}hr.star-light:after{background-color:#4CAF50;}</style><h4 id='yes'>YES, your phone is connected!</h4>";
               } else {
-                document.getElementById("isphone").innerHTML="<h4 id='no'>NO, your phone is not connected via USB</h4>";
+                document.getElementById("isphone").innerHTML="<style>header{background:#F44336;}hr.star-light:after{background-color:#F44336;}</style><h4 id='no'>NO, your phone is not connected via USB</h4>";
               }
         } else {
-          document.getElementById("isphone").innerHTML="<h4 id='no'>No, your phone is not connected via USB</h4>";
+          document.getElementById("isphone").innerHTML="<style>header{background:#F44336;}hr.star-light:after{background-color:#F44336;}</style><h4 id='no'>No, your phone is not connected via USB</h4>";
           return;
         }
       }
@@ -74,7 +74,7 @@
         </div>
       </div>
     </nav>
-    <header style="height:100%; background-color:#F44336;" class="masthead">
+    <header style="height:100%;" class="masthead">
       <div class="container">
         <div class="intro-text">
           <h1>Makeroid Starter Connection Test</h1>
