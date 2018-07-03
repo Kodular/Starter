@@ -1,98 +1,182 @@
+<!DOCTYPE html>
 <html>
   <head>
-    <link rel="shortcut icon" href="https://www.makeroid.io/assets/favicon.ico">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Makeroid Starter Connection Test</title>
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
-    <link href="css/freelancer.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="//www.makeroid.io/assets/favicon.ico">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css">
+    <script defer src="//use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
+    <style>
+      .tag:not(body) {
+        padding-left: 0;
+        padding-right: 0;
+      }
+    </style>
   </head>
-
-  <script type="text/javascript">
-  var ping = function() {
-      var xmlHttp = new XMLHttpRequest();
-      xmlHttp.onreadystatechange = function() {
-          if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-            var result = JSON.parse(this.response);
-            if (result.status == "OK") {
-                document.getElementById("status").innerHTML="<h4 id='yes'>YES, Makeroid Starter is running!</h4><br><h2>Is your phone connected via USB?</h2><h4 id='isphone'>Please Wait...</h4>";
-              } else {
-                document.getElementById("status").innerHTML="<style>header{background:#F44336;}hr.star-light:after{background-color:#F44336;}</style><h4 id='no'>An error occurred</h4>";
-              }
-          isUSB();
-          return;
-        } else {
-          document.getElementById("status").innerHTML="<style> header{background:#F44336;}hr.star-light:after{background-color:#F44336;}</style><h4 id='no'>NO, Makeroid Starter is not running<br><br><i>Please make sure the Makeroid Starter application is running</i></h4>";
-          return;
-        }
-      }
-      xmlHttp.open('GET', 'http://127.0.0.1:8004/ping/', true);
-      xmlHttp.send();
-    }
-  var isUSB = function() {
-      var xmlHttp = new XMLHttpRequest();
-      xmlHttp.onreadystatechange = function() {
-          if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-            var result = JSON.parse(this.response);
-            if (result.status == "OK") {
-                document.getElementById("isphone").innerHTML="<style>header{background:#4CAF50;}hr.star-light:after{background-color:#4CAF50;}</style><h4 id='yes'>YES, your phone is connected!</h4>";
-              } else {
-                document.getElementById("isphone").innerHTML="<style>header{background:#F44336;}hr.star-light:after{background-color:#F44336;}</style><h4 id='no'>NO, your phone is not connected via USB</h4>";
-              }
-        } else {
-          document.getElementById("isphone").innerHTML="<style>header{background:#F44336;}hr.star-light:after{background-color:#F44336;}</style><h4 id='no'>No, your phone is not connected via USB</h4>";
-          return;
-        }
-      }
-      xmlHttp.open('GET', 'http://127.0.0.1:8004/utest/', true);
-      xmlHttp.send();
-    }
-    window.onload = ping;
-  </script>
-
-  <body id="page-top">
-    <nav style="background-color:#4527a0;" class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
-      <div class="container">
-        <a class="navbar-brand js-scroll-trigger" href="#page-top">Makeroid</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          Menu
-          <i class="fa fa-bars"></i>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link js-scroll-trigger" target="_blank" href="https://www.makeroid.io">Website</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link js-scroll-trigger" target="_blank" href="https://community.makeroid.io">Community</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link js-scroll-trigger" target="_blank" href="https://status.makeroid.io">Status</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link js-scroll-trigger" target="_blank" href="https://github.com/Makeroid/Starter/releases/latest"><i class="fa fa-download"></i> Download</a>
-            </li>
-          </ul>
+  <body>
+    <section class="hero is-danger is-fullheight">
+      <div class="hero-body">
+        <div class="container">
+          <h1 class="title">Makeroid Starter Connection Test</h1>
+          <div class="tile is-ancestor">
+            <div class="tile is-vertical is-parent">
+              <div class="tile is-child box">
+                <h1 class="subtitle has-text-dark">Is Starter running?</h1>
+                <div>
+                  <button class="button" id="checkrunning">Check</button>
+                  <span class="is-italic" id="running">
+                    <div class="success is-hidden">
+                      <span class="icon has-text-success">
+                        <i class="fas fa-check-circle"></i>
+                      </span>Yes, it is running...</div>
+                    <div class="fail is-hidden">
+                      <span class="icon has-text-danger">
+                        <i class="fas fa-times-circle"></i>
+                      </span>No, it is not running.</div>
+                  </span>
+                </div>
+              </div>
+              <div class="tile is-child box">
+                <h1 class="subtitle has-text-dark">Is your phone connected?</h1>
+                <div>
+                  <button class="button" id="checkconnected">Check</button>
+                  <span class="is-italic" id="connected">
+                    <div class="success is-hidden">
+                      <span class="icon has-text-success">
+                        <i class="fas fa-check-circle"></i>
+                      </span>
+                      <span>Yes, it is connected.</span>
+                    </div>
+                    <div class="fail is-hidden">
+                      <span class="icon has-text-danger">
+                        <i class="fas fa-times-circle"></i>
+                      </span>
+                      <span>No, it is not connected.</span>
+                    </div>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="tile is-parent">
+              <div class="tile is-child box">
+                <h1 class="subtitle has-text-dark">Download Starter</h1>
+                <div class="tags">
+                  <img class="tag" alt="Total downloads" src="https://img.shields.io/github/downloads/Makeroid/Starter/total.svg" />
+                  <img class="tag" alt="Github release" src="https://img.shields.io/github/release/Makeroid/Starter.svg" />
+                </div>
+                <button class="button is-dark">
+                  <span class="icon">
+                    <i class="fab fa-github"></i>
+                  </span>
+                  <span>Download</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </nav>
-    <header style="height:100%;" class="masthead">
-      <div class="container">
-        <div class="intro-text">
-          <h1>Makeroid Starter Connection Test</h1>
-          <hr class="star-light">
-          <h2>Is Makeroid Starter running?</h2>
-          <h4 id="status">Please Wait...</h4>
+    </section>
+    <div class="modal" id="modal">
+      <div class="modal-background"></div>
+      <div class="modal-content">
+        <div class="notification">
+          <button class="delete"></button>
+          <span class="icon has-text-danger">
+            <i class="fas fa-times-circle"></i>
+          </span>
+          <span>Starter is not running!</span>
         </div>
       </div>
-    </header>
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/popper/popper.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
-    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
-    <script src="js/jqBootstrapValidation.js"></script>
-    <script src="js/contact_me.js"></script>
-    <script src="js/freelancer.min.js"></script>
+    </div>
+    <script>
+      var $checkrunning = document.getElementById("checkrunning"),
+        $checkconnected = document.getElementById("checkconnected"),
+        $running = document.getElementById("running"),
+        $connected = document.getElementById("connected"),
+        $running_success = $running.getElementsByClassName("success")[0],
+        $running_fail = $running.getElementsByClassName("fail")[0],
+        $connected_success = $connected.getElementsByClassName("success")[0],
+        $connected_fail = $connected.getElementsByClassName("fail")[0];
+
+      $checkrunning.addEventListener("click", isRunning);
+      $checkconnected.addEventListener("click", isConnected);
+
+      function isRunning() {
+        $running_success.classList.add("is-hidden");
+        $running_fail.classList.add("is-hidden");
+        const xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            const result = JSON.parse(this.response);
+            if (result.status == "OK") {
+              // starter running...
+              $running_success.classList.remove("is-hidden");
+            }
+          } else {
+            // starter not connected!!!
+            $running_fail.classList.remove("is-hidden");
+          }
+        };
+        xmlHttp.open("GET", "http://127.0.0.1:8004/ping/", true);
+        xmlHttp.send();
+      }
+
+      function isConnected() {
+        $connected_success.classList.add("is-hidden");
+        $connected_fail.classList.add("is-hidden");
+        const xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            const result = JSON.parse(this.response);
+            $checkconnected.classList.add("is-hidden");
+            if (result.status == "OK") {
+              // phone is connected
+              $connected_success.classList.remove("is-hidden");
+            } else if (result.status == "NO") {
+              // phone is not connected
+              $connected_fail.classList.remove("is-hidden");
+            }
+          } else {
+            // starter not running!
+            openModal("modal");
+          }
+        };
+        xmlHttp.open("GET", "http://127.0.0.1:8004/utest/", true);
+        xmlHttp.send();
+      }
+
+      // Modals
+
+      var rootEl = document.documentElement;
+      var $modals = document.querySelectorAll(".modal");
+      var $modalCloses = document.querySelectorAll(".modal-background, .notification .delete");
+
+      if ($modalCloses.length > 0) {
+        $modalCloses.forEach($el => {
+          $el.addEventListener("click", closeModals);
+        });
+      }
+
+      function openModal(target) {
+        var $target = document.getElementById(target);
+        rootEl.classList.add("is-clipped");
+        $target.classList.add("is-active");
+      }
+
+      function closeModals() {
+        rootEl.classList.remove("is-clipped");
+        $modals.forEach($el => {
+          $el.classList.remove("is-active");
+        });
+      }
+
+      document.addEventListener("keydown", event => {
+        var e = event || window.event;
+        if (e.keyCode === 27) {
+          closeModals();
+        }
+      });
+    </script>
   </body>
 </html>
