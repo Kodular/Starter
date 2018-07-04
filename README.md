@@ -1,5 +1,5 @@
 # Makeroid Starter
-[![Total Downloads](https://img.shields.io/github/downloads/Makeroid/Starter/total.svg)]()
+![Total Downloads](https://img.shields.io/github/downloads/Makeroid/Starter/total.svg) ![GitHub release](https://img.shields.io/github/release/Makeroid/Starter.svg)
 
 Makeroid Starter to test apps live via USB
 ___
