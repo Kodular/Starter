@@ -107,15 +107,17 @@
         $running_fail.classList.add("is-hidden");
         const xmlHttp = new XMLHttpRequest();
         xmlHttp.onreadystatechange = function () {
-          if (this.readyState == 4 && this.status == 200) {
-            const result = JSON.parse(this.response);
-            if (result.status == "OK") {
-              // starter running...
-              $running_success.classList.remove("is-hidden");
+          if (this.readyState == 4) {
+            if (this.status == 200) {
+              const result = JSON.parse(this.response);
+              if (result.status == "OK") {
+                // starter running...
+                $running_success.classList.remove("is-hidden");
+              }
+            } else {
+              // starter not connected!!!
+              $running_fail.classList.remove("is-hidden");
             }
-          } else {
-            // starter not connected!!!
-            $running_fail.classList.remove("is-hidden");
           }
         };
         xmlHttp.open("GET", "http://127.0.0.1:8004/ping/", true);
@@ -127,19 +129,21 @@
         $connected_fail.classList.add("is-hidden");
         const xmlHttp = new XMLHttpRequest();
         xmlHttp.onreadystatechange = function () {
-          if (this.readyState == 4 && this.status == 200) {
-            const result = JSON.parse(this.response);
-            $checkconnected.classList.add("is-hidden");
-            if (result.status == "OK") {
-              // phone is connected
-              $connected_success.classList.remove("is-hidden");
-            } else if (result.status == "NO") {
-              // phone is not connected
-              $connected_fail.classList.remove("is-hidden");
+          if (this.readyState == 4) {
+            if (this.status == 200) {
+              const result = JSON.parse(this.response);
+              $checkconnected.classList.add("is-hidden");
+              if (result.status == "OK") {
+                // phone is connected
+                $connected_success.classList.remove("is-hidden");
+              } else if (result.status == "NO") {
+                // phone is not connected
+                $connected_fail.classList.remove("is-hidden");
+              }
+            } else {
+              // starter not running!
+              openModal("modal");
             }
-          } else {
-            // starter not running!
-            openModal("modal");
           }
         };
         xmlHttp.open("GET", "http://127.0.0.1:8004/utest/", true);
