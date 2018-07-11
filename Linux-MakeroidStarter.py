@@ -116,7 +116,6 @@ def checkrunning(emulator):
     try:
         result = subprocess.check_output("adb devices", shell=True)
         lines = str(result).split("\\r\\n")
-        m = ""
         for line in lines[1:]:
             if emulator:
                 m = re.search("^(emulator-[1-9]+)(\\+t)(device)", line)
