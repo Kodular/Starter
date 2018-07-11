@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 from bottle import run, route, app, request, response, template, default_app, Bottle, debug, abort
 import sys
 import os
@@ -99,10 +99,10 @@ def reset():
 def replstart(device=None):
     print("Device = %s" % device)
     try:
-        subprocess.check_output((PLATDIR + "\\adb.exe -s %s forward tcp:8001 tcp:8001") % device, shell=True)
+        subprocess.check_output(("adb -s %s forward tcp:8001 tcp:8001") % device, shell=True)
         if re.match('.*emulat.*', device): #  Only fake the menu key for the emulator
-            subprocess.check_output((PLATDIR + "\\adb -s %s shell input keyevent 82") % device, shell=True)
-        subprocess.check_output((PLATDIR + "\\adb -s %s shell am start -a android.intent.action.VIEW -n io.makeroid.companion/.Screen1 --ez rundirect true") % device, shell=True)
+            subprocess.check_output(("adb -s %s shell input keyevent 82") % device, shell=True)
+        subprocess.check_output(("adb -s %s shell am start -a android.intent.action.VIEW -n io.makeroid.companion/.Screen1 --ez rundirect true") % device, shell=True)
         response.headers['Access-Control-Allow-Origin'] = '*'
         response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
         return ''
@@ -114,7 +114,7 @@ def replstart(device=None):
 def checkrunning(emulator):
     print("Checking device...")
     try:
-        result = subprocess.check_output(PLATDIR + "\\adb.exe devices", shell=True)
+        result = subprocess.check_output(PLATDIR + "adb devices", shell=True)
         lines = str(result).split("\\r\\n")
         for line in lines[1:]:
             if emulator:
@@ -134,7 +134,7 @@ def checkrunning(emulator):
 
 def killadb():
     try:
-        subprocess.check_output(PLATDIR + "\\adb.exe kill-server", shell=True)
+        subprocess.check_output(PLATDIR + "adb kill-server", shell=True)
         print("Killed adb\n")
     except subprocess.CalledProcessError as e:
         print("Problem stopping adb : status %i\n" % e.returncode)
