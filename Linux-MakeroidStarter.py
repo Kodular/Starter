@@ -114,8 +114,9 @@ def replstart(device=None):
 def checkrunning(emulator):
     print("Checking device...")
     try:
-        result = subprocess.check_output(PLATDIR + "adb devices", shell=True)
+        result = subprocess.check_output("adb devices", shell=True)
         lines = str(result).split("\\r\\n")
+        m = ""
         for line in lines[1:]:
             if emulator:
                 m = re.search("^(emulator-[1-9]+)(\\+t)(device)", line)
@@ -134,7 +135,7 @@ def checkrunning(emulator):
 
 def killadb():
     try:
-        subprocess.check_output(PLATDIR + "adb kill-server", shell=True)
+        subprocess.check_output("adb kill-server", shell=True)
         print("Killed adb\n")
     except subprocess.CalledProcessError as e:
         print("Problem stopping adb : status %i\n" % e.returncode)
