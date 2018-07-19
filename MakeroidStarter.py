@@ -1,161 +1,147 @@
-#!/usr/bin/python
-from bottle import run, route, app, request, response, template, default_app, Bottle, debug, abort
-import sys
-import os
+#!/usr/bin/env python
 import platform
-import subprocess
 import re
+import subprocess
 
-app = Bottle()
-default_app.push(app)
+from bottle import run, route, response
 
-def dash():
-    print("_ "*30 + "\n")
 
-VERSION = "1.0.0"
-print("Makeroid Starter Andromeda")
-dash()
+def hr():
+    """ Horizontal Rule """
+    print('- ' * 25)
 
-platforms = platform.uname()[0]
-print("OS = {}".format(platforms))
-if platforms == 'Windows':      #Windows only
-    if getattr(sys, 'frozen', False):
-        # frozen
-        PLATDIR = '"' + os.path.dirname(sys.executable) + '"'
-    else:
-        # unfrozen
-        PLATDIR = os.path.dirname(os.path.realpath(__file__))
-    print("Installation Path: {}".format(PLATDIR))
-else:
-    sys.exit(1)
-dash()
+
+VERSION = '1.0.1-Andromeda'
+PACKAGE_NAME = 'io.makeroid.companion'
+
+OS = platform.system()
+
+print(f'Makeroid Starter v{VERSION} for {OS}')
+hr()
+
 
 @route('/ping/')
 def ping():
-    print("Ping...")
+    print('Ping...')
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
     response.headers['Content-Type'] = 'application/json'
-    return '{ "status" : "OK", "version" : "%s" }' % VERSION
+    return {
+        "status": "OK",
+        "version": VERSION
+    }
+
 
 @route('/utest/')
 def utest():
+    print('Testing...')
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
     response.headers['Content-Type'] = 'application/json'
-    device = checkrunning(False)
+    device = checkrunning()
     if device:
-        return '{ "status" : "OK", "device" : "%s", "version" : "%s" }' % (device, VERSION)
+        print('Test Successful!')
+        return {
+            "status": "OK",
+            "device": device,
+            "version": VERSION
+        }
     else:
-        return '{ "status" : "NO", "version" : "%s" }' % VERSION
+        print('Test Failed!')
+        return {
+            "status": "NO",
+            "version": VERSION
+        }
 
-@route('/start/')
-def start():
-    subprocess.call(PLATDIR + "\\Makeroid\\run-emulator ", shell=True)
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
-    return ''
-
-@route('/emulatorreset/')
-def emulatorreset():
-    subprocess.call(PLATDIR + "\\Makeroid\\reset-emulator ", shell=True)
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
-    return ''
-
-@route('/echeck/')
-def echeck():
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
-    response.headers['Content-Type'] = 'application/json'
-    device = checkrunning(True)
-    if device:
-        return '{ "status" : "OK", "device" : "%s", "version" : "%s"}' % (device, VERSION)
-    else:
-        return '{ "status" : "NO", "version" : "%s" }' % VERSION
 
 @route('/ucheck/')
 def ucheck():
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
     response.headers['Content-Type'] = 'application/json'
-    device = checkrunning(False)
+    device = checkrunning()
     if device:
-        return '{ "status" : "OK", "device" : "%s", "version" : "%s"}' % (device, VERSION)
+        return {
+            "status": "OK",
+            "device": device,
+            "version": VERSION
+        }
     else:
-        return '{ "status" : "NO", "version" : "%s" }' % VERSION
+        return {
+            "status": "NO",
+            "version": VERSION
+        }
+
 
 @route('/reset/')
 def reset():
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
     response.headers['Content-Type'] = 'application/json'
-    killadb()
-    killemulator()
-    print("Reset done...")
-    return '{ "status" : "OK", "version" : "%s" }' % VERSION
+    print('Resetting...')
+    shutdown()
+    print('Reset Done!')
+    return {
+        "status": "OK",
+        "version": VERSION
+    }
+
 
 @route('/replstart/:device')
 def replstart(device=None):
-    print("Device = %s" % device)
+    print(f'Device = {device}')
+    print('Starting companion app (Keep your phone connected through USB)')
     try:
-        subprocess.check_output((PLATDIR + "\\adb.exe -s %s forward tcp:8001 tcp:8001") % device, shell=True)
-        if re.match('.*emulat.*', device): #  Only fake the menu key for the emulator
-            subprocess.check_output((PLATDIR + "\\adb -s %s shell input keyevent 82") % device, shell=True)
-        subprocess.check_output((PLATDIR + "\\adb -s %s shell am start -a android.intent.action.VIEW -n io.makeroid.companion/.Screen1 --ez rundirect true") % device, shell=True)
+        subprocess.check_output(f'adb -s {device} forward tcp:8001 tcp:8001', shell=True)
+        subprocess.check_output(
+            f'adb -s {device} shell am start -a android.intent.action.VIEW -n {PACKAGE_NAME}/.Screen1 --ez rundirect true',
+            shell=True)
         response.headers['Access-Control-Allow-Origin'] = '*'
         response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
         return ''
     except subprocess.CalledProcessError as e:
-        print("Problem starting companion app : status %i\n" % e.returncode)
+        print(f'Problem starting companion app : status {e.returncode}\n')
         return ''
 
 
-def checkrunning(emulator):
-    print("Checking device...")
+def checkrunning():
+    global match
+    match = ''
+    print('Checking device...')
     try:
-        result = subprocess.check_output(PLATDIR + "\\adb.exe devices", shell=True)
-        lines = str(result).split("\\r\\n")
+        result = subprocess.check_output('adb devices', shell=True)
+        lines = result.splitlines()
         for line in lines[1:]:
-            if emulator:
-                m = re.search("^(emulator-[1-9]+)(\\+t)(device)", line)
-            else:
-                if re.search("^(emulator-[1-9]+)(\\+t)(device)", line): # We are an emulator
-                    continue
-                m = re.search(r"^([a-zA-Z0-9]+)(\\*t)(device)", line)
-            if m:
-                break
-        if m:
-            return m.group(1)
+            if line:
+                line_str = str(line, 'utf-8')  # convert byte to string
+                if re.search(r'(emulator-\d+)\s+device', line_str):  # We are an emulator
+                    continue  # Skip it
+                match = re.search(r'([\w\d]+)\s+device', line_str)
+                if match:
+                    break
+        if match:
+            return match.group(1)
         return False
     except subprocess.CalledProcessError as e:
-        print("Problem checking for devices : status %i\n" % e.returncode)
+        print(f'Problem checking for devices : status {e.returncode}')
         return False
+
 
 def killadb():
     try:
-        subprocess.check_output(PLATDIR + "\\adb.exe kill-server", shell=True)
-        print("Killed adb\n")
+        subprocess.check_output('adb kill-server', shell=True)
+        print('Killed adb')
     except subprocess.CalledProcessError as e:
-        print("Problem stopping adb : status %i\n" % e.returncode)
+        print(f'Problem stopping adb : status {e.returncode}')
         return ''
 
-def killemulator():
-    try:
-        subprocess.check_output(PLATDIR + "\\Makeroid\\kill-emulator", shell=True)
-        print("Killed emulator\n")
-    except subprocess.CalledProcessError as e:
-        print("Problem stopping emulator : status %i\n" % e.returncode)
-        return ''
 
 def shutdown():
-    try:                                # Be quiet...
-        killadb()
-        killemulator()
-    except:
-        pass
+    killadb()
+
 
 if __name__ == '__main__':
     import atexit
     atexit.register(shutdown)
+
     run(host='127.0.0.1', port=8004)
