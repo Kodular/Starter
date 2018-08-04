@@ -6,7 +6,7 @@ from subprocess import check_call, check_output, CalledProcessError
 from bottle import run, route, response
 
 
-VERSION = '1.0.1-Andromeda'
+VERSION = '1.0.4-Andromeda'
 PACKAGE_NAME = 'io.makeroid.companion'
 
 OS = platform.system()
@@ -74,7 +74,7 @@ def reset():
     response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
     response.headers['Content-Type'] = 'application/json'
     print('Resetting...')
-    shutdown()
+    killadb()
     print('Reset Done!')
     return {
         "status": "OK",
@@ -83,11 +83,15 @@ def reset():
 
 
 @route('/replstart/<device>')
-def replstart(device=None):
+def replstart(device):
     print('Device =', device)
-    print('Starting companion app (Keep your phone connected through USB)')
+    print('Starting companion app (Keep your phone connected via USB)')
     try:
-        check_call(['adb', '-s', 'device', 'forward', 'tcp:8001', 'tcp:8001'], shell=True)
+        check_call(
+            ['adb',
+             '-s', device,
+             'forward', 'tcp:8001', 'tcp:8001'],
+            shell=True)
         check_call(
             ['adb',
              '-s', device,
@@ -97,16 +101,16 @@ def replstart(device=None):
              '-n', PACKAGE_NAME + '/.Screen1',
              '--ez', 'rundirect', 'true'],
             shell=True)
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
-        return ''
     except CalledProcessError as e:
         print('Problem starting companion app : status', e.returncode, '\n')
-        return ''
+
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
+    return ''
 
 
 def checkrunning():
-    global match = ''
+    global match
     print('Checking device...')
     try:
         result = check_output(['adb', 'devices'], shell=True)
@@ -119,8 +123,7 @@ def checkrunning():
             match = re.search(r'([\w\d]+)\s+device', line)
             if match:
                 break
-        return match.group(1) if match
-                              else False
+        return match.group(1) if match else False
     except CalledProcessError as e:
         print('Problem checking for devices : status', e.returncode, '\n')
         return False
