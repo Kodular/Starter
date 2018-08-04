@@ -1,14 +1,9 @@
 #!/usr/bin/env python
 import platform
 import re
-import subprocess
+from subprocess import check_call, check_output, CalledProcessError
 
 from bottle import run, route, response
-
-
-def hr():
-    """ Horizontal Rule """
-    print('- ' * 25)
 
 
 VERSION = '1.0.1-Andromeda'
@@ -16,8 +11,8 @@ PACKAGE_NAME = 'io.makeroid.companion'
 
 OS = platform.system()
 
-print(f'Makeroid Starter v{VERSION} for {OS}')
-hr()
+print('Makeroid Starter', 'v' + VERSION, 'for', OS)
+print('- ' * 25)
 
 
 @route('/ping/')
@@ -87,61 +82,59 @@ def reset():
     }
 
 
-@route('/replstart/:device')
+@route('/replstart/<device>')
 def replstart(device=None):
-    print(f'Device = {device}')
+    print('Device =', device)
     print('Starting companion app (Keep your phone connected through USB)')
     try:
-        subprocess.check_output(f'adb -s {device} forward tcp:8001 tcp:8001', shell=True)
-        subprocess.check_output(
-            f'adb -s {device} shell am start -a android.intent.action.VIEW -n {PACKAGE_NAME}/.Screen1 --ez rundirect true',
+        check_call(['adb', '-s', 'device', 'forward', 'tcp:8001', 'tcp:8001'], shell=True)
+        check_call(
+            ['adb',
+             '-s', device,
+             'shell',
+             'am', 'start',
+             '-a', 'android.intent.action.VIEW',
+             '-n', PACKAGE_NAME + '/.Screen1',
+             '--ez', 'rundirect', 'true'],
             shell=True)
         response.headers['Access-Control-Allow-Origin'] = '*'
         response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
         return ''
-    except subprocess.CalledProcessError as e:
-        print(f'Problem starting companion app : status {e.returncode}\n')
+    except CalledProcessError as e:
+        print('Problem starting companion app : status', e.returncode, '\n')
         return ''
 
 
 def checkrunning():
-    global match
-    match = ''
+    global match = ''
     print('Checking device...')
     try:
-        result = subprocess.check_output('adb devices', shell=True)
-        lines = result.splitlines()
+        result = check_output(['adb', 'devices'], shell=True)
+        lines = result.decode('utf-8').strip().splitlines()
         for line in lines[1:]:
             if line:
-                line_str = str(line, 'utf-8')  # convert byte to string
-                if re.search(r'(emulator-\d+)\s+device', line_str):  # We are an emulator
+                if re.search(r'(emulator-\d+)\sdevice', line):  # We are an emulator
                     continue  # Skip it
-                match = re.search(r'([\w\d]+)\s+device', line_str)
+                match = re.search(r'([\w\d]+)\sdevice', line)
                 if match:
                     break
-        if match:
-            return match.group(1)
-        return False
-    except subprocess.CalledProcessError as e:
-        print(f'Problem checking for devices : status {e.returncode}')
+        return match.group(1) if match
+                              else False
+    except CalledProcessError as e:
+        print('Problem checking for devices : status', e.returncode, '\n')
         return False
 
 
 def killadb():
     try:
-        subprocess.check_output('adb kill-server', shell=True)
+        check_output(['adb', 'kill-server'], shell=True)
         print('Killed adb')
-    except subprocess.CalledProcessError as e:
-        print(f'Problem stopping adb : status {e.returncode}')
-        return ''
-
-
-def shutdown():
-    killadb()
+    except CalledProcessError as e:
+        print('Problem stopping adb : status', e.returncode)
 
 
 if __name__ == '__main__':
     import atexit
-    atexit.register(shutdown)
+    atexit.register(killadb)
 
     run(host='127.0.0.1', port=8004)
