@@ -112,12 +112,13 @@ def checkrunning():
         result = check_output(['adb', 'devices'], shell=True)
         lines = result.decode('utf-8').strip().splitlines()
         for line in lines[1:]:
-            if line:
-                if re.search(r'(emulator-\d+)\sdevice', line):  # We are an emulator
-                    continue  # Skip it
-                match = re.search(r'([\w\d]+)\sdevice', line)
-                if match:
-                    break
+            if not line or line.startswith('*') or 'offline' in line:
+                continue
+            if re.search(r'(emulator-\d+)\s+device', line):  # We are an emulator
+                continue  # Skip it
+            match = re.search(r'([\w\d]+)\s+device', line)
+            if match:
+                break
         return match.group(1) if match
                               else False
     except CalledProcessError as e:
