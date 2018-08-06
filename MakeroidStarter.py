@@ -110,7 +110,7 @@ def replstart(device):
 
 
 def checkrunning():
-    global match
+    match = ''
     print('Checking device...')
     try:
         result = check_output(['adb', 'devices'], shell=True)
@@ -123,10 +123,9 @@ def checkrunning():
             match = re.search(r'([\w\d]+)\s+device', line)
             if match:
                 break
-        return match.group(1) if match else False
     except CalledProcessError as e:
         print('Problem checking for devices : status', e.returncode, '\n')
-        return False
+    return match.group(1) if match else False
 
 
 def killadb():

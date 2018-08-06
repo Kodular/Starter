@@ -1,0 +1,1 @@
+del /s /q __pycache__ build dist MakeroidStarter.spec
