@@ -6,7 +6,7 @@ from subprocess import check_call, check_output, CalledProcessError
 from bottle import run, route, response
 
 
-VERSION = '1.0.4-Andromeda'
+VERSION = '1'
 PACKAGE_NAME = 'io.makeroid.companion'
 
 OS = platform.system()
