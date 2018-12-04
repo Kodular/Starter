@@ -91,66 +91,59 @@
     </div>
     <script>
       var $checkrunning = document.getElementById("checkrunning"),
-        $checkconnected = document.getElementById("checkconnected"),
-        $running = document.getElementById("running"),
-        $connected = document.getElementById("connected"),
-        $running_success = $running.getElementsByClassName("success")[0],
-        $running_fail = $running.getElementsByClassName("fail")[0],
-        $connected_success = $connected.getElementsByClassName("success")[0],
-        $connected_fail = $connected.getElementsByClassName("fail")[0];
-
+          $checkconnected = document.getElementById("checkconnected"),
+          $running = document.getElementById("running"),
+          $connected = document.getElementById("connected"),
+          $running_success = $running.getElementsByClassName("success")[0],
+          $running_fail = $running.getElementsByClassName("fail")[0],
+          $connected_success = $connected.getElementsByClassName("success")[0],
+          $connected_fail = $connected.getElementsByClassName("fail")[0];
+      
       $checkrunning.addEventListener("click", isRunning);
       $checkconnected.addEventListener("click", isConnected);
 
       function isRunning() {
         hide($running_success);
         hide($running_fail);
-        const xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-          if (this.readyState == 4) {
-            if (this.status == 200) {
-              const result = JSON.parse(this.response);
-              if (result.status == "OK") {
-                // starter running...
-                hide($checkrunning);
-                show($running_success);
-              }
-            } else {
-              // starter not connected!!!
-              $running_fail.classList.remove("is-hidden");
-            }
+        
+        fetch("http://127.0.0.1:8004/ping/")
+        .then(res => res.json())
+        .then(result => {
+          if (result.status == "OK") {
+            // starter running...
+            hide($checkrunning);
+            show($running_success);
           }
-        };
-        xhr.open("GET", "http://127.0.0.1:8004/ping/", true);
-        xhr.send();
+        })
+        .catch(e => {
+          // starter not connected!!!
+          show($running_fail);
+        })
       }
 
       function isConnected() {
         hide($connected_success);
         hide($connected_fail);
-        const xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-          if (this.readyState == 4) {
-            if (this.status == 200) {
-              const result = JSON.parse(this.response);
-              hide($checkconnected);
-              if (result.status == "OK") {
-                // phone is connected
-                show($connected_success);
-              } else if (result.status == "NO") {
-                // phone is not connected
-                show($connected_fail);
-              }
-            } else {
-              // starter not running!
-              openModal("modal");
-            }
-          }
-        };
-        xhr.open("GET", "http://127.0.0.1:8004/utest/", true);
-        xhr.send();
+        
+        fetch("http://127.0.0.1:8004/utest/")
+        .then(res => res.json())
+        .then(result => {
+          hide($checkconnected);
+          if (result.status == "OK") {
+            // phone is connected
+            show($connected_success);
+          } else if (result.status == "NO") {
+            // phone is not connected
+            show($connected_fail);
+        })
+        .catch(e => {
+          // starter not running!
+          openModal("modal");
+        })
       }
-      
+
+      // Utility functions
+
       function hide(el) {
         el.classList.add("is-hidden");
       }
