@@ -1,7 +1,8 @@
-# Makeroid Starter
-![Total Downloads](https://img.shields.io/github/downloads/Makeroid/Starter/total.svg) ![GitHub release](https://img.shields.io/github/release/Makeroid/Starter.svg)
+# Kodular Starter
+![Total Downloads](https://img.shields.io/github/downloads/Kodular/Starter/total.svg) ![GitHub release](https://img.shields.io/github/release/Kodular/Starter.svg)
 
-Makeroid Starter to test apps live via USB
-___
+Kodular Starter to test apps live via USB
 
-To test the connection, go to https://starter.makeroid.io
+---
+
+To test the connection, go to https://starter.kodular.io
