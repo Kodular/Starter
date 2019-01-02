@@ -5,14 +5,11 @@ from subprocess import check_call, check_output, CalledProcessError
 
 from bottle import run, route, response
 
-
-VERSION = '1'
+VERSION = '1.3 Draco'
 PACKAGE_NAME = 'io.makeroid.companion'
 
-OS = platform.system()
-
-print('Makeroid Starter', 'v' + VERSION, 'for', OS)
-print('- ' * 25)
+print('Kodular Starter', 'Version ' + VERSION + ' for Windows')
+print('- ' * 31)
 
 
 @route('/ping/')
@@ -120,7 +117,7 @@ def checkrunning():
                 continue
             if re.search(r'(emulator-\d+)\s+device', line):  # We are an emulator
                 continue  # Skip it
-            match = re.search(r'([\w\d]+)\s+device', line)
+            match = re.search(r'(\w+)\s+device', line)
             if match:
                 break
     except CalledProcessError as e:
