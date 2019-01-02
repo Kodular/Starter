@@ -8,7 +8,7 @@ from bottle import run, route, response
 VERSION = '1.3 Draco'
 PACKAGE_NAME = 'io.makeroid.companion'
 
-print('Kodular Starter', 'Version ' + VERSION + ' for Windows')
+print('Kodular Starter', 'Version ' + VERSION + ', for Windows')
 print('- ' * 31)
 
 
