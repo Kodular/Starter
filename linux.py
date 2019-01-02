@@ -2,6 +2,7 @@
 import platform
 import re
 from subprocess import check_call, check_output, call, CalledProcessError
+import atexit
 
 from bottle import run, route, response
 
@@ -138,4 +139,5 @@ def killadb():
 
 
 if __name__ == '__main__':
+    atexit.register(killadb)
     run(host='127.0.0.1', port=8004)
