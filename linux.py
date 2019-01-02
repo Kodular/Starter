@@ -10,7 +10,7 @@ VERSION = '1.3 Draco'
 PACKAGE_NAME = 'io.makeroid.companion'
 
 
-print('Kodular Starter', 'Version ' + VERSION, ', for Linux')
+print('Kodular Starter', 'Version ' + VERSION + ', for Linux')
 print('- ' * 31)
 
 # Check for ADB
