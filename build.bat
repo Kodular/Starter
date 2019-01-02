@@ -1,3 +1,3 @@
 @echo off
-pyinstaller --onefile --debug --icon=icon.ico --noconfirm --clean MakeroidStarter.py
+pyinstaller --onefile --debug --icon=icon.ico --noconfirm --clean windows.py
 pause
