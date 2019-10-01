@@ -31,5 +31,5 @@ jobs:
       run: pyinstaller KodularStarter.spec
     - uses: actions/upload-artifact@master
         with:
-          name: 'Kodular-Starter-${{ matrix.os }}'
+          name: 'Kodular Starter'
           path: dist/
