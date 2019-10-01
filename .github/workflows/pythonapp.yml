@@ -30,6 +30,6 @@ jobs:
     - name: Build exe
       run: pyinstaller KodularStarter.spec
     - uses: actions/upload-artifact@master
-        with:
-          name: 'Kodular Starter'
-          path: dist/
+      with:
+        name: Kodular Starter
+        path: dist/
