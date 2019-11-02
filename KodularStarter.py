@@ -1,22 +1,16 @@
 #!/usr/bin/env python
+import atexit
 import platform
 import re
-from subprocess import check_call, check_output, call, CalledProcessError
-import atexit
+from subprocess import check_call, check_output, CalledProcessError
 
 from bottle import run, route, response
 
-VERSION = '1.3 Draco'
+from utils import get_adb_exe
+
+VERSION = '1'
 PACKAGE_NAME = 'io.makeroid.companion'
-
-
-print('Kodular Starter', 'Version ' + VERSION + ', for Linux')
-print('- ' * 31)
-
-# Check for ADB
-if call(['which', 'adb']) != 0:
-    raise Exception('ADB not installed!')
-
+ADB = get_adb_exe()
 
 
 @route('/ping/')
@@ -37,7 +31,7 @@ def utest():
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
     response.headers['Content-Type'] = 'application/json'
-    device = checkrunning()
+    device = get_device()
     if device:
         print('Test Successful!')
         return {
@@ -58,7 +52,7 @@ def ucheck():
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
     response.headers['Content-Type'] = 'application/json'
-    device = checkrunning()
+    device = get_device()
     if device:
         return {
             "status": "OK",
@@ -78,7 +72,7 @@ def reset():
     response.headers['Access-Control-Allow-Headers'] = 'origin, content-type'
     response.headers['Content-Type'] = 'application/json'
     print('Resetting...')
-    killadb()
+    kill_adb()
     print('Reset Done!')
     return {
         "status": "OK",
@@ -92,11 +86,11 @@ def replstart(device):
     print('Starting companion app (Keep your phone connected via USB)')
     try:
         check_call(
-            ['adb',
+            [ADB,
              '-s', device,
              'forward', 'tcp:8001', 'tcp:8001'])
         check_call(
-            ['adb',
+            [ADB,
              '-s', device,
              'shell',
              'am', 'start',
@@ -111,11 +105,10 @@ def replstart(device):
     return ''
 
 
-def checkrunning():
-    match = ''
-    print('Checking device...')
+def get_device():
+    print('Finding device...')
     try:
-        result = check_output(['adb', 'devices'])
+        result = check_output([ADB, 'devices'])
         lines = result.decode('utf-8').strip().splitlines()
         for line in lines[1:]:
             if not line or line.startswith('*') or 'offline' in line:
@@ -124,20 +117,28 @@ def checkrunning():
                 continue  # Skip it
             match = re.search(r'(\w+)\s+device', line)
             if match:
-                break
+                return match.group(1)
     except CalledProcessError as e:
         print('Problem checking for devices : status', e.returncode, '\n')
-    return match.group(1) if match else False
+    return None
 
 
-def killadb():
+def kill_adb():
     try:
-        check_output(['adb', 'kill-server'])
+        check_output([ADB, 'kill-server'])
         print('Killed adb')
     except CalledProcessError as e:
-        print('Problem stopping adb : status', e.returncode)
+        print('Problem stopping adb : status', e.returncode, '\n')
 
 
 if __name__ == '__main__':
-    atexit.register(killadb)
-    run(host='127.0.0.1', port=8004)
+    print('Kodular Starter version:', VERSION)
+    print('OS:', platform.system())
+    print('Architecture:', platform.architecture()[0])
+    print('Machine:', platform.machine())
+    print('ADB path:', ADB)
+    print('- ' * 31)
+
+    atexit.register(kill_adb)
+
+    run(host='127.0.0.1', port=8004)  # Run Bottle server
