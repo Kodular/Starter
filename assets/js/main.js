@@ -11,10 +11,10 @@ function starterNotRunning() {
     dialog.open();
     snackbar.close()
 }
-var $checkrunning = document.getElementById("checkrunning"),
-    $checkconnected = document.getElementById("checkconnected");
-$checkrunning.addEventListener("click", isRunning);
-$checkconnected.addEventListener("click", isConnected);
+checkrunning = document.getElementById("checkrunning"),
+checkconnected = document.getElementById("checkconnected");
+checkrunning.addEventListener("click", isRunning);
+checkconnected.addEventListener("click", isConnected);
 
 function isRunning() {
     snackbar.open();
