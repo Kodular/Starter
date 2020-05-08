@@ -11,7 +11,7 @@ function starterNotRunning() {
     dialog.open();
     snackbar.close()
 }
-checkrunning = document.getElementById("checkrunning"),
+checkrunning = document.getElementById("checkrunning");
 checkconnected = document.getElementById("checkconnected");
 checkrunning.addEventListener("click", isRunning);
 checkconnected.addEventListener("click", isConnected);
