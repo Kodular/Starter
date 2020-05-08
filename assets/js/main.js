@@ -1,4 +1,4 @@
-const snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+
 window.onscroll = function() {
     if (window.scrollY > 5)
         document.getElementsByClassName('d-header')[0].classList.add('with-shadow');
@@ -68,4 +68,5 @@ function isConnected() {
 function openUrl(url, external = !1) {
     window.open(url, external ? '_blank' : '_self')
 }
+const snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
 const dialog = new mdc.dialog.MDCDialog(document.querySelector('.mdc-dialog'))
