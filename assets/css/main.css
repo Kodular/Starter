@@ -1,1 +1,259 @@
-:root{--mdc-theme-primary:#4527a0}body{margin:90px 0 0 0}.mdc-icon-button{font-family:'Material icons Outlined'}.ode-Logo{margin:10px;height:30px!important;width:30px!important}.logoText{font-family:Jost;font-size:20px;color:#4527a0;font-weight:500}#titlebar{background-color:#fff;color:#4527a0;top:0;border-bottom:1px #ddd solid;transition:all 0.2s}.with-shadow{box-shadow:0 2px 8px rgba(0,0,0,.2)}img.tag{padding-left:0;padding-right:0}#carbonads{margin-top:30px;display:block;overflow:hidden;padding:15px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",Helvetica,Arial,sans-serif;line-height:1.5;border-radius:4px;text-align:center;box-shadow:0 0 0 1px hsla(0,0%,0%,.1);background-color:hsl(0,0%,98%);font-size:14px;border:1px solid #ccc;max-width:375px}#carbonads a{color:inherit;text-decoration:none}#carbonads a:hover{color:inherit}#carbonads span{position:relative;display:block;overflow:hidden}.carbon-img{float:left;display:block;margin-bottom:8px;line-height:1}.carbon-text{display:block;float:left;max-width:calc(100% - 130px - 1em);text-align:center;color:#363636!important}.carbon-poweredby{display:block;padding:10px 14px;background:repeating-linear-gradient(-45deg,transparent,transparent 5px,hsla(0,0%,0%,.025) 5px,hsla(0,0%,0%,.025) 10px) hsla(203,11%,95%,.4);text-transform:uppercase;letter-spacing:1px;font-weight:600;font-size:9px;line-height:0;color:#363636!important}@media only screen and (min-width:320px) and (max-width:759px){#carbonads{float:none;margin:0 auto;max-width:330px}#carbonads span{position:relative}#carbonads>span{max-width:none}.carbon-img{float:left;margin:0}.carbon-img img{max-width:130px!important}.carbon-text{float:left;margin-bottom:0;padding:8px 20px;text-align:left;max-width:calc(100% - 130px - 3em)}.carbon-poweredby{left:130px;bottom:0;display:block;width:100%}}.titles{font-family:Jost;font-weight:500;font-size:20px;color:#333}.title{font-family:Jost;font-weight:600;font-size:24px;color:#444;width:100%;text-align:center}.card{border:1px #ddd solid;border-radius:5px;transition:all 0.2s;max-width:300px;padding:20px 8px;margin:10px}.card:hover{box-shadow:0 4px 8px 0 rgba(0,0,0,.2),0 6px 20px 0 rgba(0,0,0,.19)}.cardIMG{height:240px;width:100%}.mdc-dialog--opening,.mdc-dialog__scrim--opening{animation-name:md-dialog-opening;animation-duration:.4s}.mdc-dialog--closing,.mdc-dialog__scrim--closing{animation-name:md-dialog-closing;animation-duration:.4s}@keyframes md-dialog-opening{0%{transform:translateY(-20px);opacity:0}100%{transform:translateY(0);opacity:1}}@keyframes md-dialog-closing{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-20px);opacity:0}}.dialog_text{font-family:Jost;font-weight:500;font-size:16px;color:#444;text-align:center}.cards{width:60%;display:grid;grid-template-columns:repeat(2,1fr);grid-column-gap:30px;grid-row-gap:1em;justify-content:center}@media only screen and (max-width:690px){.cards{display:block}}.footer{border-top: 1px solid #DDD; position: fixed; width: 100vw; bottom: 0; background: #FFF; z-index: 2;}.footer__container{margin: 0 auto; padding: 10px 20px 0 20px;}.footer .logo{height: 40px; width: 40px; filter: grayscale(1); opacity: 0.5; margin-top: 4px;}.footer .social-link{float: right; font-size: 18px; color: #999; margin-bottom: 10px;}
+:root {
+    --mdc-theme-primary: #4527a0;
+}
+
+body {
+    margin: 90px 0 0;
+}
+
+.mdc-icon-button {
+    font-family: 'Material icons Outlined', sans-serif;
+}
+
+.ode-Logo {
+    margin: 10px;
+    height: 30px !important;
+    width: 30px !important;
+}
+
+.logoText {
+    font-family: Jost, sans-serif;
+    font-size: 20px;
+    color: #4527a0;
+    font-weight: 500;
+}
+
+#titlebar {
+    background-color: #fff;
+    color: #4527a0;
+    top: 0;
+    border-bottom: 1px #ddd solid;
+    transition: all 0.2s;
+}
+
+.with-shadow {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+}
+
+img.tag {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+#carbonads {
+    margin-top: 30px;
+    display: block;
+    overflow: hidden;
+    padding: 15px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    border-radius: 4px;
+    text-align: center;
+    box-shadow: 0 0 0 1px hsla(0, 0%, 0%, .1);
+    background-color: hsl(0, 0%, 98%);
+    font-size: 14px;
+    border: 1px solid #ccc;
+    max-width: 375px;
+}
+
+#carbonads a {
+    color: inherit;
+    text-decoration: none;
+}
+
+#carbonads a:hover {
+    color: inherit;
+}
+
+#carbonads span {
+    position: relative;
+    display: block;
+    overflow: hidden;
+}
+
+.carbon-img {
+    float: left;
+    display: block;
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.carbon-text {
+    display: block;
+    float: left;
+    max-width: calc(100% - 130px - 1em);
+    text-align: center;
+    color: #363636 !important;
+}
+
+.carbon-poweredby {
+    display: block;
+    padding: 10px 14px;
+    background: repeating-linear-gradient(-45deg, transparent, transparent 5px, hsla(0, 0%, 0%, .025) 5px, hsla(0, 0%, 0%, .025) 10px) hsla(203, 11%, 95%, .4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    font-size: 9px;
+    line-height: 0;
+    color: #363636 !important;
+}
+
+@media only screen and (min-width: 320px) and (max-width: 759px) {
+    #carbonads {
+        float: none;
+        margin: 0 auto;
+        max-width: 330px;
+    }
+
+    #carbonads span {
+        position: relative;
+    }
+
+    #carbonads > span {
+        max-width: none;
+    }
+
+    .carbon-img {
+        float: left;
+        margin: 0;
+    }
+
+    .carbon-img img {
+        max-width: 130px !important;
+    }
+
+    .carbon-text {
+        float: left;
+        margin-bottom: 0;
+        padding: 8px 20px;
+        text-align: left;
+        max-width: calc(100% - 130px - 3em);
+    }
+
+    .carbon-poweredby {
+        left: 130px;
+        bottom: 0;
+        display: block;
+        width: 100%;
+    }
+}
+
+.titles {
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size: 20px;
+    color: #333;
+}
+
+.title {
+    font-family: Jost, sans-serif;
+    font-weight: 600;
+    font-size: 24px;
+    color: #444;
+    width: 100%;
+    text-align: center;
+}
+
+.card {
+    border: 1px #ddd solid;
+    border-radius: 5px;
+    transition: all 0.2s;
+    min-width: 300px;
+    padding: 20px 8px;
+    margin: 10px;
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, .2), 0 6px 20px 0 rgba(0, 0, 0, .19);
+}
+
+.cardIMG {
+    height: 240px;
+    width: 100%;
+}
+
+.mdc-dialog--opening,
+.mdc-dialog__scrim--opening {
+    animation-name: md-dialog-opening;
+    animation-duration: 0.4s;
+}
+
+.mdc-dialog--closing,
+.mdc-dialog__scrim--closing {
+    animation-name: md-dialog-closing;
+    animation-duration: 0.4s;
+}
+
+@keyframes md-dialog-opening {
+    0% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes md-dialog-closing {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+}
+
+.dialog_text {
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    color: #444;
+    text-align: center;
+}
+
+.cards {
+    width: 60%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-column-gap: 30px;
+    grid-row-gap: 1em;
+    justify-content: center;
+}
+
+@media only screen and (max-width: 690px) {
+    .cards {
+        display: block;
+    }
+}
+
+.footer {
+    border-top: 1px solid #DDD;
+    position: fixed;
+    width: 100vw;
+    bottom: 0;
+    background: #FFF;
+    z-index: 2;
+}
+
+.footer__container {
+    margin: 0 auto;
+    padding: 10px 20px 0;
+}
+
+.footer .logo {
+    height: 40px;
+    width: 40px;
+    filter: grayscale(1);
+    opacity: 0.5;
+    margin-top: 4px;
+}
+
+.footer .social-link {
+    float: right;
+    font-size: 18px;
+    color: #999;
+    margin-bottom: 10px;
+}
