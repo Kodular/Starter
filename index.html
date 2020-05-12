@@ -1,246 +1,212 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Kodular Starter Connection Test</title>
-    
     <link rel="stylesheet" href="//cdn.materialdesignicons.com/5.1.45/css/materialdesignicons.min.css">
-    
     <link rel="stylesheet" href="assets/css/main.css">
-    <link rel="stylesheet" href="https://unpkg.com/@material/button@latest/dist/mdc.button.min.css" />
-    
-    <link rel="stylesheet" href="https://unpkg.com/@material/icon-button@latest/dist/mdc.icon-button.min.css" />
-    
-     <link rel="stylesheet" href="https://unpkg.com/@material/top-app-bar@latest/dist/mdc.top-app-bar.min.css" />
-    
-    <link rel="stylesheet" href="https://unpkg.com/@material/dialog@latest/dist/mdc.dialog.css" />
-    
-   <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
-    
-
-    
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" />
-    
-    
-    <link rel="stylesheet" href="https://indestructibletype.com/fonts/Jost.css" />
-    
-    <link rel="stylesheet" href="https://unpkg.com/@material/snackbar@latest/dist/mdc.snackbar.css" />
-    
-    
-    
+    <link rel="stylesheet" href="https://unpkg.com/@material/button@latest/dist/mdc.button.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/@material/icon-button@latest/dist/mdc.icon-button.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/@material/top-app-bar@latest/dist/mdc.top-app-bar.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/@material/dialog@latest/dist/mdc.dialog.css"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"/>
+    <link rel="stylesheet" href="https://indestructibletype.com/fonts/Jost.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/@material/snackbar@latest/dist/mdc.snackbar.css"/>
     <link rel="shortcut icon" href="//assets.kodular.io/images/favicon/icon.ico">
-    
-     <script src='https://unpkg.com/@material/dialog@latest/dist/mdc.dialog.js'></script>
-    
-    
-    
+    <script src='https://unpkg.com/@material/dialog@latest/dist/mdc.dialog.js'></script>
     <script src='https://unpkg.com/@material/snackbar@latest/dist/mdc.snackbar.js'></script>
-    
-    
     <style>
-      .mdc-snackbar__label{font-family:Jost;font-size:14px;font-weight:400}
-      
-      :root {
-        --mdc-theme-primary: #4527a0;
-      }
+        .mdc-snackbar__label {
+            font-family: Jost, sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        :root {
+            --mdc-theme-primary: #4527a0;
+        }
     </style>
-  </head>
-  <body>
-    
-    
-    <header id="titlebar" class="mdc-top-app-bar d-header">
-<div class="mdc-top-app-bar__row">
-<section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
-
-
-
-<img src="https://assets.kodular.io/images/logo/circle/100x100.png" class="ode-Logo" style="width: 40px; height: 40px;">
-  
-  <span class="logoText">Kodular Starter</span>
-</section>
-<section id="titlebar_shortcuts" class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end">
-<button class="mdc-icon-button material-icons mdc-top-app-bar__action-item--unbounded" onclick="openUrl('//community.kodular.io', true)">supervised_user_circle</button>
-<button class="mdc-icon-button material-icons mdc-top-app-bar__action-item--unbounded" onclick="openUrl('https://docs.kodular.io/guides/live-development/usb/', true)">library_books</button>
-
-</section>
-</div>
+</head>
+<body>
+<header id="titlebar" class="mdc-top-app-bar d-header">
+    <div class="mdc-top-app-bar__row">
+        <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+            <img src="https://assets.kodular.io/images/logo/circle/100x100.png" class="ode-Logo"
+                 style="width: 40px; height: 40px;">
+            <span class="logoText">Kodular Starter</span>
+        </section>
+        <section id="titlebar_shortcuts" class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end">
+            <button class="mdc-icon-button material-icons mdc-top-app-bar__action-item--unbounded"
+                    onclick="openUrl('//community.kodular.io', true)">supervised_user_circle
+            </button>
+            <button class="mdc-icon-button material-icons mdc-top-app-bar__action-item--unbounded"
+                    onclick="openUrl('https://docs.kodular.io/guides/live-development/usb/', true)">library_books
+            </button>
+        </section>
+    </div>
 </header>
-   
-    
-    
-
-
-          <h1 class="title">Kodular Starter Connection Test</h1>
-          <div align="center" >
-            <div class="cards">
-              <div class="card">
-                 <h1 class="titles">Is Starter running?</h1>
-                <img class="cardIMG" src="assets/images/check-starter-connection.svg"><button class="mdc-button mdc-button--unelevated" id="checkrunning"  style="font-family: Jost;
-    text-transform: none;">  <span class="mdc-button__ripple"></span> Check Starter</button></div>
-                 
-              <div class="card">
-                  <h1 class="titles">Is your phone connected?</h1>
-                <img class="cardIMG" src="assets/images/check-phone-connection.svg">
-                
-                <button class="mdc-button mdc-button--unelevated" id="checkconnected"  style="font-family: Jost;
-    text-transform: none;">  <span class="mdc-button__ripple"></span> Check Phone Connection</button>
-                
-              </div></div>
-              
-              <div>
-         
- 
-                <script src="//cdn.carbonads.com/carbon.js?serve=CK7DL2Q7&placement=wwwkodulario" id="_carbonads_js" async type="text/javascript"></script>
-               
-                  
-
-                 
-                  
-                
-                <h1 class="titles">Download Starter</h1>
-                <div class="tags">
-                  <img class="tag" alt="Total downloads" src="https://img.shields.io/github/downloads/Kodular/Starter/total.svg" />
-                  <img class="tag" alt="Github release" src="https://img.shields.io/github/release/Kodular/Starter.svg" />
-                </div>
-                
-                <button class="mdc-button mdc-button--unelevated"  style="font-family: Jost;
-    text-transform: none; color: #444; background-color: #ddd; margin: 15px;margin-bottom: 120px;" onclick="openUrl('https://github.com/Kodular/Starter/releases/latest', true)">  <span class="mdc-button__ripple"></span> <i class="material-icons-outlined mdc-button__icon">download</i>Download on GitHub</button>
-
-               </div> </div>
-    
-    <div class="mdc-snackbar">
-  <div class="mdc-snackbar__surface">
-    <div class="mdc-snackbar__label" id="snack_text"
-         role="status"
-         aria-live="polite">
-      Checking...
+<h1 class="title">Kodular Starter Connection Test</h1>
+<div align="center">
+    <div class="cards">
+        <div class="card">
+            <h1 class="titles">Is Starter running?</h1>
+            <img class="cardIMG" src="assets/images/check-starter-connection.svg">
+            <button class="mdc-button mdc-button--unelevated" id="checkrunning" style="font-family: Jost, sans-serif;
+            text-transform: none;"><span class="mdc-button__ripple"></span> Check Starter
+            </button>
+        </div>
+        <div class="card">
+            <h1 class="titles">Is your phone connected?</h1>
+            <img class="cardIMG" src="assets/images/check-phone-connection.svg">
+            <button class="mdc-button mdc-button--unelevated" id="checkconnected" style="font-family: Jost, sans-serif;
+            text-transform: none;"><span class="mdc-button__ripple"></span> Check Phone Connection
+            </button>
+        </div>
     </div>
-    <div class="mdc-snackbar__actions">
-      <button type="button" class="mdc-button mdc-snackbar__action">
-        <div class="mdc-button__ripple"></div>
-        <span class="mdc-button__label" style="text-transform:none;font-family:Jost;font-weight:500;font-size:14px">Ok</span>
-      </button>
-    </div>
-  </div>
-</div>
-    
-    
-    <div class="mdc-dialog">
-  <div class="mdc-dialog__container">
-    <div class="mdc-dialog__surface" style="border-radius: 5px;"
-      role="alertdialog"
-      aria-modal="true"
-      aria-labelledby="my-dialog-title"
-      aria-describedby="my-dialog-content">
-      <div class="mdc-dialog__content" id="my-dialog-content" style="display:grid; padding: 0 70px;">
-        
-        <img id="dialogImage" src="" style="height: 240px; width: 100%">
-        
-        <span id="dialogStatus" class="dialog_text"></span>
-        
-      </div>
-      <div class="mdc-dialog__actions">
-        
-        <button type="button" class="mdc-button mdc-button--unelevated mdc-dialog__button" data-mdc-dialog-action="discard">
-          <div class="mdc-button__ripple"></div>
-          <span class="mdc-button__label" style="font-family: Jost;
-    text-transform: none;">Ok</span>
+    <div>
+        <script src="//cdn.carbonads.com/carbon.js?serve=CK7DL2Q7&placement=wwwkodulario" id="_carbonads_js" async
+                type="text/javascript"></script>
+        <h1 class="titles">Download Starter</h1>
+        <div class="tags">
+            <img class="tag" alt="Total downloads"
+                 src="https://img.shields.io/github/downloads/Kodular/Starter/total.svg"/>
+            <img class="tag" alt="Github release" src="https://img.shields.io/github/release/Kodular/Starter.svg"/>
+        </div>
+        <button class="mdc-button mdc-button--unelevated" style="font-family: Jost, sans-serif;
+          text-transform: none; color: #444; background-color: #ddd; margin: 15px 15px 120px;"
+                onclick="openUrl('https://github.com/Kodular/Starter/releases/latest', true)"><span
+                class="mdc-button__ripple"></span> <i class="material-icons-outlined mdc-button__icon">download</i>Download
+            on GitHub
         </button>
-      </div>
     </div>
-  </div>
-  <div class="mdc-dialog__scrim"></div>
 </div>
-    
-    <script>
-      
+<div class="mdc-snackbar">
+    <div class="mdc-snackbar__surface">
+        <div class="mdc-snackbar__label" id="snack_text" role="status" aria-live="polite">
+            Checking...
+        </div>
+        <div class="mdc-snackbar__actions">
+            <button type="button" class="mdc-button mdc-snackbar__action">
+                <div class="mdc-button__ripple"></div>
+                <span class="mdc-button__label"
+                      style="text-transform:none;font-family:Jost, sans-serif;font-weight:500;font-size:14px">Ok</span>
+            </button>
+        </div>
+    </div>
+</div>
+<div class="mdc-dialog">
+    <div class="mdc-dialog__container">
+        <div class="mdc-dialog__surface" style="border-radius: 5px;" role="alertdialog" aria-modal="true"
+             aria-labelledby="my-dialog-title" aria-describedby="my-dialog-content">
+            <div class="mdc-dialog__content" id="my-dialog-content" style="display:grid; padding: 0 70px;">
+                <img id="dialogImage" src="" style="height: 240px; width: 100%">
+                <span id="dialogStatus" class="dialog_text"></span>
+            </div>
+            <div class="mdc-dialog__actions">
+                <button type="button" class="mdc-button mdc-button--unelevated mdc-dialog__button"
+                        data-mdc-dialog-action="discard">
+                    <div class="mdc-button__ripple"></div>
+                    <span class="mdc-button__label" style="font-family: Jost, sans-serif;
+                text-transform: none;">Ok</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="mdc-dialog__scrim"></div>
+</div>
+<div class="footer">
+    <div class="footer__container">
+        <img class="logo" src="https://assets.kodular.io/images/logo/circle/512x512.png">
+        <button class="social-link mdc-icon-button" onclick="openUrl('https://twitter.com/KodularIO', true)"><span
+                class="mdi mdi-twitter"></span></button>
+        <button class="social-link mdc-icon-button" onclick="openUrl('//www.facebook.com/Kodular', true)"><span
+                class="mdi mdi-facebook"></span></button>
+        <button class="social-link mdc-icon-button" onclick="openUrl('//www.instagram.com/Kodular', true)"><span
+                class="mdi mdi-instagram"></span></button>
+        <button class="social-link mdc-icon-button" onclick="openUrl('//t.me/Kodular', true)"><span
+                class="mdi mdi-telegram"></span></button>
+        <button class="social-link mdc-icon-button" onclick="openUrl('//community.kodular.io', true)"><span
+                class="mdi mdi-account-group"></span></button>
+    </div>
+</div>
+<script>
+    window.onscroll = function () {
+        if (window.scrollY > 5)
+            document.getElementsByClassName('d-header')[0].classList.add('with-shadow');
+        else document.getElementsByClassName('d-header')[0].classList.remove('with-shadow')
+    }
 
-window.onscroll = function() {
-    if (window.scrollY > 5)
-        document.getElementsByClassName('d-header')[0].classList.add('with-shadow');
-    else document.getElementsByClassName('d-header')[0].classList.remove('with-shadow')
-}
+    function starterNotRunning() {
+        document.getElementById("dialogStatus").innerHTML = "Starter is not running on your computer.<br>Check and try again";
+        document.getElementById("dialogImage").src = "assets/images/starter-not-running.svg";
+        dialog.open();
+        snackbar.close()
+    }
 
-function starterNotRunning() {
-    document.getElementById("dialogStatus").innerHTML = "Starter is not running on your computer.<br>Check and try again";
-    document.getElementById("dialogImage").src = "assets/images/starter-not-running.svg";
-    dialog.open();
-    snackbar.close()
-}
-checkrunning = document.getElementById("checkrunning");
-checkconnected = document.getElementById("checkconnected");
-checkrunning.addEventListener("click", isRunning);
-checkconnected.addEventListener("click", isConnected);
+    checkrunning = document.getElementById("checkrunning");
+    checkconnected = document.getElementById("checkconnected");
+    checkrunning.addEventListener("click", isRunning);
+    checkconnected.addEventListener("click", isConnected);
 
-function isRunning() {
-    snackbar.open();
-    fetch("http://127.0.0.1:8004/ping/").then(res => res.json()).then(result => {
-        if (result.status == "OK") {
-            starterRunning()
-        }
-    }).catch(e => {
-        starterNotRunning()
-    })
-}
+    function isRunning() {
+        snackbar.open();
+        fetch("http://127.0.0.1:8004/ping/").then(res => res.json()).then(result => {
+            if (result.status === "OK") {
+                starterRunning()
+            }
+        }).catch(e => {
+            starterNotRunning()
+        })
+    }
 
-function starterRunning() {
-    document.getElementById("dialogImage").src = "assets/images/starter-running.svg";
-    document.getElementById("dialogStatus").innerHTML = "Yes! Starter is running.<br>Now you can connect to Companion via USB";
-    dialog.open();
-    snackbar.close()
-}
+    function starterRunning() {
+        document.getElementById("dialogImage").src = "assets/images/starter-running.svg";
+        document.getElementById("dialogStatus").innerHTML = "Yes! Starter is running.<br>Now you can connect to Companion via USB";
+        dialog.open();
+        snackbar.close()
+    }
 
-function phoneConnected() {
-    document.getElementById("dialogImage").src = "assets/images/phone-connected.svg";
-    document.getElementById("dialogStatus").innerHTML = "Your phone is connected!<brReady to start creating apps with Kodular Creator<br#HappyKoding!";
-    dialog.open();
-    snackbar.close()
-}
+    function phoneConnected() {
+        document.getElementById("dialogImage").src = "assets/images/phone-connected.svg";
+        document.getElementById("dialogStatus").innerHTML = "Your phone is connected!<brReady to start creating apps with Kodular Creator<br#HappyKoding!";
+        dialog.open();
+        snackbar.close()
+    }
 
-function phoneNoConnected() {
-    document.getElementById("dialogImage").src = "assets/images/phone-not-connected.svg";
-    document.getElementById("dialogStatus").innerHTML = "Starter is running, but has not found a device.<br> Please check and try again";
-    dialog.open();
-    snackbar.close()
-}
+    function phoneNoConnected() {
+        document.getElementById("dialogImage").src = "assets/images/phone-not-connected.svg";
+        document.getElementById("dialogStatus").innerHTML = "Starter is running, but has not found a device.<br> Please check and try again";
+        dialog.open();
+        snackbar.close()
+    }
 
-function isConnected() {
-    snackbar.open();
-    resultado = "";
-    fetch("http://127.0.0.1:8004/utest/").then(res => res.json()).then(result => {
-        resultado = result;
-        if (result.status == "OK") {
-            phoneConnected()
-        } else if (result.status == "NO") {
-            phoneNoConnected()
-        }
-    }).catch(e => {
-        if (resultado.status == "NO") {
-            phoneNoConnected()
-        } else starterNotRunning()
-    })
-}
+    function isConnected() {
+        snackbar.open();
+        resultado = "";
+        fetch("http://127.0.0.1:8004/utest/")
+            .then(res => res.json())
+            .then(result => {
+                resultado = result;
+                if (result.status === "OK") {
+                    phoneConnected()
+                } else if (result.status === "NO") {
+                    phoneNoConnected()
+                }
+            }).catch(e => {
+            if (resultado.status === "NO") {
+                phoneNoConnected()
+            } else starterNotRunning()
+        })
+    }
 
-function openUrl(url, external = !1) {
-    window.open(url, external ? '_blank' : '_self')
-}
-const snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-const dialog = new mdc.dialog.MDCDialog(document.querySelector('.mdc-dialog'))
+    function openUrl(url, external = !1) {
+        window.open(url, external ? '_blank' : '_self')
+    }
 
-    </script>
-  </body>
-  
-  <div class="footer">
-			<div class="footer__container">
-			<img class="logo" src="https://assets.kodular.io/images/logo/circle/512x512.png">
-
-			<button class="social-link mdc-icon-button" onclick="openUrl('https://twitter.com/KodularIO', true)"><span class="mdi mdi-twitter"></span></button>
-			<button class="social-link mdc-icon-button" onclick="openUrl('//www.facebook.com/Kodular', true)"><span class="mdi mdi-facebook"></span></button>
-			<button class="social-link mdc-icon-button" onclick="openUrl('//www.instagram.com/Kodular', true)"><span class="mdi mdi-instagram"></span></button>
-			<button class="social-link mdc-icon-button" onclick="openUrl('//t.me/Kodular', true)"><span class="mdi mdi-telegram"></span></button>
-			<button class="social-link mdc-icon-button" onclick="openUrl('//community.kodular.io', true)"><span class="mdi mdi-account-group"></span></button>
-			</div>
-		</div>
-		
+    const snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+    const dialog = new mdc.dialog.MDCDialog(document.querySelector('.mdc-dialog'))
+</script>
+</body>
 </html>
