@@ -1,283 +1,212 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Kodular Starter Connection Test</title>
+    <link rel="stylesheet" href="//cdn.materialdesignicons.com/5.1.45/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="https://unpkg.com/@material/button@latest/dist/mdc.button.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/@material/icon-button@latest/dist/mdc.icon-button.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/@material/top-app-bar@latest/dist/mdc.top-app-bar.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/@material/dialog@latest/dist/mdc.dialog.css"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"/>
+    <link rel="stylesheet" href="https://indestructibletype.com/fonts/Jost.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/@material/snackbar@latest/dist/mdc.snackbar.css"/>
     <link rel="shortcut icon" href="//assets.kodular.io/images/favicon/icon.ico">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css" integrity="sha256-2pUeJf+y0ltRPSbKOeJh09ipQFYxUdct5nTY6GAXswA=" crossorigin="anonymous" />
-    <script defer src="https://use.fontawesome.com/releases/v5.5.0/js/all.js" integrity="sha384-GqVMZRt5Gn7tB9D9q7ONtcp4gtHIUEW/yG7h98J7IpE3kpi+srfFyyB/04OV6pG0" crossorigin="anonymous"></script>
+    <script src='https://unpkg.com/@material/dialog@latest/dist/mdc.dialog.js'></script>
+    <script src='https://unpkg.com/@material/snackbar@latest/dist/mdc.snackbar.js'></script>
     <style>
-      img.tag {
-        padding-left: 0;
-        padding-right: 0;
-      }
-
-      #carbonads {
-        display: block;
-        overflow: hidden;
-        padding: 15px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial, sans-serif;
-        line-height: 1.5;
-        border-radius: 4px;
-        text-align: center;
-        box-shadow: 0 0 0 1px hsla(0, 0%, 0%, .1);
-        background-color: hsl(0, 0%, 98%);
-        font-size: 14px;
-        border: 1px solid #ccc;
-        max-width: 375px;
-      }
-
-      #carbonads a {
-        color: inherit;
-        text-decoration: none;
-      }
-
-      #carbonads a:hover {
-        color: inherit;
-      }
-
-      #carbonads span {
-        position: relative;
-        display: block;
-        overflow: hidden;
-      }
-
-      .carbon-img {
-        float: left;
-        display: block;
-        margin-bottom: 8px;
-        line-height: 1;
-      }
-
-      .carbon-text {
-        display: block;
-        float: left;
-        max-width: calc(100% - 130px - 1em);
-        text-align: center;
-        color: #363636 !important;
-      }
-
-      .carbon-poweredby {
-        display: block;
-        padding: 10px 14px;
-        background: repeating-linear-gradient(-45deg, transparent, transparent 5px, hsla(0, 0%, 0%, .025) 5px, hsla(0, 0%, 0%, .025) 10px) hsla(203, 11%, 95%, .4);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-weight: 600;
-        font-size: 9px;
-        line-height: 0;
-        color: #363636 !important;
-      }
-
-      @media only screen and (min-width: 320px) and (max-width: 759px) {
-        #carbonads {
-          float: none;
-          margin: 0 auto;
-          max-width: 330px;
-        }
-        #carbonads span {
-          position: relative;
-        }
-        #carbonads > span {
-          max-width: none;
-        }
-        .carbon-img {
-          float: left;
-          margin: 0;
+        .mdc-snackbar__label {
+            font-family: Jost, sans-serif;
+            font-size: 14px;
+            font-weight: 400;
         }
 
-        .carbon-img img {
-          max-width: 130px !important;
+        :root {
+            --mdc-theme-primary: #4527a0;
         }
-        .carbon-text {
-          float: left;
-          margin-bottom: 0;
-          padding: 8px 20px;
-          text-align: left;
-          max-width: calc(100% - 130px - 3em);
-        }
-        .carbon-poweredby {
-          left: 130px;
-          bottom: 0;
-          display: block;
-          width: 100%;
-        }
-      }
     </style>
-  </head>
-  <body>
-    <section class="hero is-success is-fullheight">
-      <div class="hero-body">
-        <div class="container">
-          <h1 class="title">Kodular Starter Connection Test</h1>
-          <script src="//cdn.carbonads.com/carbon.js?serve=CK7DL2Q7&placement=wwwkodulario" id="_carbonads_js" async type="text/javascript"></script>
-          <br>
-          <div class="tile is-ancestor">
-            <div class="tile is-vertical is-parent">
-              <div class="tile is-child box">
-                <h1 class="subtitle has-text-dark">Is Starter running?</h1>
-                <div>
-                  <button class="button" id="checkrunning">Check</button>
-                  <span class="is-italic" id="running">
-                    <div class="success is-hidden">
-                      <span class="icon has-text-success">
-                        <i class="fas fa-check-circle"></i>
-                      </span>Yes, it is running...</div>
-                    <div class="fail is-hidden">
-                      <span class="icon has-text-danger">
-                        <i class="fas fa-times-circle"></i>
-                      </span>No, it is not running.</div>
-                  </span>
-                </div>
-              </div>
-              <div class="tile is-child box">
-                <h1 class="subtitle has-text-dark">Is your phone connected?</h1>
-                <div>
-                  <button class="button" id="checkconnected">Check</button>
-                  <span class="is-italic" id="connected">
-                    <div class="success is-hidden">
-                      <span class="icon has-text-success">
-                        <i class="fas fa-check-circle"></i>
-                      </span>
-                      <span>Yes, it is connected.</span>
-                    </div>
-                    <div class="fail is-hidden">
-                      <span class="icon has-text-danger">
-                        <i class="fas fa-times-circle"></i>
-                      </span>
-                      <span>No, it is not connected.</span>
-                    </div>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="tile is-parent">
-              <div class="tile is-child box">
-                <h1 class="subtitle has-text-dark">Download Starter</h1>
-                <div class="tags">
-                  <img class="tag" alt="Total downloads" src="https://img.shields.io/github/downloads/Kodular/Starter/total.svg" />
-                  <img class="tag" alt="Github release" src="https://img.shields.io/github/release/Kodular/Starter.svg" />
-                </div>
-                <a class="button is-dark" href="https://github.com/Kodular/Starter/releases/latest" target="_blank">
-                  <span class="icon">
-                    <i class="fab fa-github"></i>
-                  </span>
-                  <span>Download</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    <div class="modal" id="modal">
-      <div class="modal-background"></div>
-      <div class="modal-content">
-        <div class="notification">
-          <button class="delete"></button>
-          <span class="icon has-text-danger">
-            <i class="fas fa-times-circle"></i>
-          </span>
-          <span>Starter is not running!</span>
-        </div>
-      </div>
+</head>
+<body>
+<header id="titlebar" class="mdc-top-app-bar d-header">
+    <div class="mdc-top-app-bar__row">
+        <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+            <img src="https://assets.kodular.io/images/logo/circle/100x100.png" class="ode-Logo"
+                 style="width: 40px; height: 40px;">
+            <span class="logoText">Kodular Starter</span>
+        </section>
+        <section id="titlebar_shortcuts" class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end">
+            <button class="mdc-icon-button material-icons mdc-top-app-bar__action-item--unbounded"
+                    onclick="openUrl('//community.kodular.io', true)">supervised_user_circle
+            </button>
+            <button class="mdc-icon-button material-icons mdc-top-app-bar__action-item--unbounded"
+                    onclick="openUrl('https://docs.kodular.io/guides/live-development/usb/', true)">library_books
+            </button>
+        </section>
     </div>
-    <script>
-      var $checkrunning = document.getElementById("checkrunning"),
-          $checkconnected = document.getElementById("checkconnected"),
-          $running = document.getElementById("running"),
-          $connected = document.getElementById("connected"),
-          $running_success = $running.getElementsByClassName("success")[0],
-          $running_fail = $running.getElementsByClassName("fail")[0],
-          $connected_success = $connected.getElementsByClassName("success")[0],
-          $connected_fail = $connected.getElementsByClassName("fail")[0];
-      
-      $checkrunning.addEventListener("click", isRunning);
-      $checkconnected.addEventListener("click", isConnected);
+</header>
+<h1 class="title">Kodular Starter Connection Test</h1>
+<div align="center">
+    <div class="cards">
+        <div class="card">
+            <h1 class="titles">Is Starter running?</h1>
+            <img class="cardIMG" src="assets/images/check-starter-connection.svg">
+            <button class="mdc-button mdc-button--unelevated" id="checkrunning" style="font-family: Jost, sans-serif;
+            text-transform: none;"><span class="mdc-button__ripple"></span> Check Starter
+            </button>
+        </div>
+        <div class="card">
+            <h1 class="titles">Is your phone connected?</h1>
+            <img class="cardIMG" src="assets/images/check-phone-connection.svg">
+            <button class="mdc-button mdc-button--unelevated" id="checkconnected" style="font-family: Jost, sans-serif;
+            text-transform: none;"><span class="mdc-button__ripple"></span> Check Phone Connection
+            </button>
+        </div>
+    </div>
+    <div>
+        <script src="//cdn.carbonads.com/carbon.js?serve=CK7DL2Q7&placement=wwwkodulario" id="_carbonads_js" async
+                type="text/javascript"></script>
+        <h1 class="titles">Download Starter</h1>
+        <div class="tags">
+            <img class="tag" alt="Total downloads"
+                 src="https://img.shields.io/github/downloads/Kodular/Starter/total.svg"/>
+            <img class="tag" alt="Github release" src="https://img.shields.io/github/release/Kodular/Starter.svg"/>
+        </div>
+        <button class="mdc-button mdc-button--unelevated" style="font-family: Jost, sans-serif;
+          text-transform: none; color: #444; background-color: #ddd; margin: 15px 15px 120px;"
+                onclick="openUrl('https://github.com/Kodular/Starter/releases/latest', true)"><span
+                class="mdc-button__ripple"></span> <i class="material-icons-outlined mdc-button__icon">download</i>Download
+            on GitHub
+        </button>
+    </div>
+</div>
+<div class="mdc-snackbar">
+    <div class="mdc-snackbar__surface">
+        <div class="mdc-snackbar__label" id="snack_text" role="status" aria-live="polite">
+            Checking...
+        </div>
+        <div class="mdc-snackbar__actions">
+            <button type="button" class="mdc-button mdc-snackbar__action">
+                <div class="mdc-button__ripple"></div>
+                <span class="mdc-button__label"
+                      style="text-transform:none;font-family:Jost, sans-serif;font-weight:500;font-size:14px">Ok</span>
+            </button>
+        </div>
+    </div>
+</div>
+<div class="mdc-dialog">
+    <div class="mdc-dialog__container">
+        <div class="mdc-dialog__surface" style="border-radius: 5px;" role="alertdialog" aria-modal="true"
+             aria-labelledby="my-dialog-title" aria-describedby="my-dialog-content">
+            <div class="mdc-dialog__content" id="my-dialog-content" style="display:grid; padding: 0 70px;">
+                <img id="dialogImage" src="" style="height: 240px; width: 100%">
+                <span id="dialogStatus" class="dialog_text"></span>
+            </div>
+            <div class="mdc-dialog__actions">
+                <button type="button" class="mdc-button mdc-button--unelevated mdc-dialog__button"
+                        data-mdc-dialog-action="discard">
+                    <div class="mdc-button__ripple"></div>
+                    <span class="mdc-button__label" style="font-family: Jost, sans-serif;
+                text-transform: none;">Ok</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="mdc-dialog__scrim"></div>
+</div>
+<div class="footer">
+    <div class="footer__container">
+        <img class="logo" src="https://assets.kodular.io/images/logo/circle/512x512.png">
+        <button class="social-link mdc-icon-button" onclick="openUrl('https://twitter.com/KodularIO', true)"><span
+                class="mdi mdi-twitter"></span></button>
+        <button class="social-link mdc-icon-button" onclick="openUrl('//www.facebook.com/Kodular', true)"><span
+                class="mdi mdi-facebook"></span></button>
+        <button class="social-link mdc-icon-button" onclick="openUrl('//www.instagram.com/Kodular', true)"><span
+                class="mdi mdi-instagram"></span></button>
+        <button class="social-link mdc-icon-button" onclick="openUrl('//t.me/Kodular', true)"><span
+                class="mdi mdi-telegram"></span></button>
+        <button class="social-link mdc-icon-button" onclick="openUrl('//community.kodular.io', true)"><span
+                class="mdi mdi-account-group"></span></button>
+    </div>
+</div>
+<script>
+    window.onscroll = function () {
+        if (window.scrollY > 5)
+            document.getElementsByClassName('d-header')[0].classList.add('with-shadow');
+        else document.getElementsByClassName('d-header')[0].classList.remove('with-shadow')
+    }
 
-      function isRunning() {
-        hide($running_success);
-        hide($running_fail);
-        
-        fetch("http://127.0.0.1:8004/ping/")
-        .then(res => res.json())
-        .then(result => {
-          if (result.status == "OK") {
-            // starter running...
-            hide($checkrunning);
-            show($running_success);
-          }
-        })
-        .catch(e => {
-          // starter not connected!!!
-          show($running_fail);
-        })
-      }
+    function starterNotRunning() {
+        document.getElementById("dialogStatus").innerHTML = "Starter is not running on your computer.<br>Check and try again";
+        document.getElementById("dialogImage").src = "assets/images/starter-not-running.svg";
+        dialog.open();
+        snackbar.close()
+    }
 
-      function isConnected() {
-        hide($connected_success);
-        hide($connected_fail);
-        
+    checkrunning = document.getElementById("checkrunning");
+    checkconnected = document.getElementById("checkconnected");
+    checkrunning.addEventListener("click", isRunning);
+    checkconnected.addEventListener("click", isConnected);
+
+    function isRunning() {
+        snackbar.open();
+        fetch("http://127.0.0.1:8004/ping/").then(res => res.json()).then(result => {
+            if (result.status === "OK") {
+                starterRunning()
+            }
+        }).catch(e => {
+            starterNotRunning()
+        })
+    }
+
+    function starterRunning() {
+        document.getElementById("dialogImage").src = "assets/images/starter-running.svg";
+        document.getElementById("dialogStatus").innerHTML = "Yes! Starter is running.<br>Now you can connect to Companion via USB";
+        dialog.open();
+        snackbar.close()
+    }
+
+    function phoneConnected() {
+        document.getElementById("dialogImage").src = "assets/images/phone-connected.svg";
+        document.getElementById("dialogStatus").innerHTML = "Your phone is connected!<brReady to start creating apps with Kodular Creator<br#HappyKoding!";
+        dialog.open();
+        snackbar.close()
+    }
+
+    function phoneNoConnected() {
+        document.getElementById("dialogImage").src = "assets/images/phone-not-connected.svg";
+        document.getElementById("dialogStatus").innerHTML = "Starter is running, but has not found a device.<br> Please check and try again";
+        dialog.open();
+        snackbar.close()
+    }
+
+    function isConnected() {
+        snackbar.open();
+        resultado = "";
         fetch("http://127.0.0.1:8004/utest/")
-        .then(res => res.json())
-        .then(result => {
-          hide($checkconnected);
-          if (result.status == "OK") {
-            // phone is connected
-            show($connected_success);
-          } else if (result.status == "NO") {
-            // phone is not connected
-            show($connected_fail);
-          }
+            .then(res => res.json())
+            .then(result => {
+                resultado = result;
+                if (result.status === "OK") {
+                    phoneConnected()
+                } else if (result.status === "NO") {
+                    phoneNoConnected()
+                }
+            }).catch(e => {
+            if (resultado.status === "NO") {
+                phoneNoConnected()
+            } else starterNotRunning()
         })
-        .catch(e => {
-          // starter not running!
-          openModal("modal");
-        })
-      }
+    }
 
-      // Utility functions
+    function openUrl(url, external = !1) {
+        window.open(url, external ? '_blank' : '_self')
+    }
 
-      function hide(el) {
-        el.classList.add("is-hidden");
-      }
-      
-      function show(el) {
-        el.classList.remove("is-hidden");
-      }
-
-      // Modals
-
-      var rootEl = document.documentElement;
-      var $modals = document.querySelectorAll(".modal");
-      var $modalCloses = document.querySelectorAll(".modal-background, .notification .delete");
-
-      if ($modalCloses.length > 0) {
-        $modalCloses.forEach($el => {
-          $el.addEventListener("click", closeModals);
-        });
-      }
-
-      function openModal(target) {
-        var $target = document.getElementById(target);
-        rootEl.classList.add("is-clipped");
-        $target.classList.add("is-active");
-      }
-
-      function closeModals() {
-        rootEl.classList.remove("is-clipped");
-        $modals.forEach($el => {
-          $el.classList.remove("is-active");
-        });
-      }
-
-      document.addEventListener("keydown", event => {
-        var e = event || window.event;
-        if (e.keyCode === 27) {
-          closeModals();
-        }
-      });
-    </script>
-  </body>
+    const snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+    const dialog = new mdc.dialog.MDCDialog(document.querySelector('.mdc-dialog'))
+</script>
+</body>
 </html>
