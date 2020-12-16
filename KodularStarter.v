@@ -103,7 +103,7 @@ fn get_device() ?string {
 			return line[group.start..group.end]
 		}
 	}
-	return error('No connected device found!')
+	return none
 }
 
 fn run_companion(deviceid string) {
@@ -116,7 +116,7 @@ fn kill_adb() {
 		eprintln('Failed to kill adb!')
 		return
 	}
-	eprintln('Killed adb...')
+	println('Killed adb...')
 }
 
 fn print_info() {
@@ -128,5 +128,5 @@ fn print_info() {
 	println('Architecture: $arch')
 	println('Machine: $os_info.machine')
 	println('ADB path: null')
-	println('- '.repeat(31))
+	println('- '.repeat(22))
 }
