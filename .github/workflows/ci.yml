@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - name: Set up V version latest
+        uses: nocturlab/setup-vlang-action@master
+        with:
+          v-version: latest
+      - name: Build executable
+        run: |
+          mkdir out
+          v -o out/KodularStarter KodularStarter.v
+      - name: Download rcedit
+        uses: carlosperate/download-file-action@v1.0.3
+        id: dl-rcedit
+        with:
+            file-url: 'https://github.com/electron/rcedit/releases/download/v1.1.1/rcedit-x64.exe'
+        if: matrix.os == 'windows-latest'
+      - name: Set icon to exe
+        shell: cmd
+        run: |
+          "${{ steps.dl-rcedit.outputs.file-path }}" "out/KodularStarter.exe" --set-icon icon.ico --set-file-version 2 --set-product-version 2 --set-version-string "ProductName" "Kodular Starter"
+        if: matrix.os == 'windows-latest'
+      - uses: actions/upload-artifact@v2
+        with:
+          name: KodularStarter_${{ matrix.os }}
+          path: out/*
