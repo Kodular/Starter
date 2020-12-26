@@ -30,24 +30,16 @@ jobs:
       - name: Build executable
         run: |
           mkdir out
-          v -o out/KodularStarter KodularStarter.v
+          v -prod -o out/KodularStarter KodularStarter.v
 
       - name: Set executable bit
         if: matrix.os != 'windows-latest'
         run: chmod +x ./out/KodularStarter
 
-      - id: dl-rcedit
-        name: Download rcedit
-        if: matrix.os == 'windows-latest'
-        uses: carlosperate/download-file-action@v1.0.3
-        with:
-            file-url: 'https://github.com/electron/rcedit/releases/download/v1.1.1/rcedit-x64.exe'
-
       - name: Set icon to exe
         if: matrix.os == 'windows-latest'
         shell: cmd
-        run: |
-          "${{ steps.dl-rcedit.outputs.file-path }}" "out/KodularStarter.exe" --set-icon icon.ico --set-file-version 2 --set-product-version 2 --set-version-string "ProductName" "Kodular Starter"
+        run: ext/rcedit-x64.exe out/KodularStarter.exe --set-icon icon.ico --set-file-version 2 --set-product-version 2 --set-version-string "ProductName" "Kodular Starter"
 
       - uses: actions/upload-artifact@v2
         with:
