@@ -36,10 +36,9 @@ jobs:
         if: matrix.os != 'windows-latest'
         run: chmod +x ./out/KodularStarter
 
-      - name: Set icon to exe
+      - name: Set metadata to exe
         if: matrix.os == 'windows-latest'
-        shell: cmd
-        run: ext/rcedit-x64.exe out/KodularStarter.exe --set-icon icon.ico --set-file-version 2 --set-product-version 2 --set-version-string "ProductName" "Kodular Starter"
+        run: ./ext/rcedit-x64.exe out/KodularStarter.exe --set-icon icon.ico --set-file-version 2 --set-product-version 2 --set-version-string "ProductName" "Kodular Starter"
 
       - uses: actions/upload-artifact@v2
         with:
