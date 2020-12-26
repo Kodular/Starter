@@ -16,7 +16,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
-    name: Build on ${{ matrix.os }}
+    name: Build on ${{ runner.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -42,7 +42,7 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: KodularStarter_${{ matrix.os }}
+          name: KodularStarter_${{ runner.os == 'Windows' && 'Windows.exe' || runner.os }}
           path: out/*
           
   release:
