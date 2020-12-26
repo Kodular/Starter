@@ -1,25 +1,26 @@
 name: CI
 
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  release:
+    types: [published]
 
-  # Allows you to run this workflow manually from the Actions tab
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
       - name: Set up V version latest
@@ -53,3 +54,25 @@ jobs:
         with:
           name: KodularStarter_${{ matrix.os }}
           path: out/*
+
+      - name: Zip release
+        if: github.event_name == 'release'
+        run: zip -r KodularStarter_${{ matrix.os }}.zip out
+
+      - name: Get release
+        id: get_release
+        if: github.event_name == 'release'
+        uses: bruceadams/get-release@v1.2.2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload release binary
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: ./KodularStarter_${{ matrix.os }}.zip
+          asset_name: KodularStarter_${{ matrix.os }}.zip
+          asset_content_type: application/zip
