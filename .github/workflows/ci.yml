@@ -1,11 +1,10 @@
 name: CI
 
 on:
-  release:
-    types: [published]
-
   push:
     branches: [master]
+    tags:
+      - 'v*'
   pull_request:
     branches: [master]
 
@@ -54,25 +53,76 @@ jobs:
         with:
           name: KodularStarter_${{ matrix.os }}
           path: out/*
+          
+  release:
+    name: Create GitHub release
+    needs: build
 
-      - name: Zip release
-        if: github.event_name == 'release'
-        run: zip -r KodularStarter_${{ matrix.os }}.zip out
+    runs-on: ubuntu-latest
 
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  publish:
+    name: Publish 
+    needs: release
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        version: [ubuntu, windows, macOS]    
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Fetch artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: ${{ matrix.version }}-latest
+          path: ./${{ matrix.version }}
+          
+      - name: Get short tag name
+        uses: jungwinter/split@v1
+        id: split
+        with:
+          msg: ${{ github.ref }}
+          seperator: /
       - name: Get release
-        id: get_release
-        if: github.event_name == 'release'
-        uses: bruceadams/get-release@v1.2.2
+        id: get_release_info
+        uses: leahlundqvist/get-release@v1.3.1
         env:
           GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag_name: ${{ steps.split.outputs._2 }}
 
       - name: Upload release binary
-        if: github.event_name == 'release'
+        if: matrix.version == 'windows'
         uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ./KodularStarter_${{ matrix.os }}.zip
-          asset_name: KodularStarter_${{ matrix.os }}.zip
-          asset_content_type: application/zip
+          asset_path: ./${{ matrix.version }}/KodularStarter.exe
+          asset_name: KodularStarter_${{ matrix.os }}.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload release binary
+        if: matrix.version != 'windows'
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: ./${{ matrix.version }}/KodularStarter
+          asset_name: KodularStarter_${{ matrix.os }}
+          asset_content_type: application/octet-stream
