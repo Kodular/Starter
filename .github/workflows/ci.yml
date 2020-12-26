@@ -28,6 +28,9 @@ jobs:
         run: |
           mkdir out
           v -o out/KodularStarter KodularStarter.v
+      - name: Set executable bit
+        run: chmod +x ./out/KodularStarter
+        if: matrix.os != 'windows-latest'
       - name: Download rcedit
         uses: carlosperate/download-file-action@v1.0.3
         id: dl-rcedit
