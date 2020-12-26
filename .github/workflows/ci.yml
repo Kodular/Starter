@@ -16,9 +16,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
-    name: Build on ${{ runner.os }}
     runs-on: ${{ matrix.os }}
-
+    name: Build on ${{ runner.os }}
+    
     steps:
       - uses: actions/checkout@v2
 
