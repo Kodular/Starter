@@ -48,12 +48,21 @@ jobs:
   release:
     name: Create GitHub release
     needs: build
-
     runs-on: ubuntu-latest
 
     if: startsWith(github.ref, 'refs/tags/v')
+
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     
     steps:
+      - name: Get short tag name
+        uses: jungwinter/split@v1
+        id: split
+        with:
+          msg: ${{ github.ref }}
+          seperator: /
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -61,8 +70,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
+          release_name: Release ${{ steps.split.outputs._2 }}
+          draft: true
           prerelease: false
 
   publish:
@@ -72,48 +81,23 @@ jobs:
 
     strategy:
       matrix:
-        version: [Linux, Windows, macOS]    
+        os: [Linux, Windows, macOS]    
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+
       - name: Fetch artifacts
         uses: actions/download-artifact@v1
         with:
-          name: ${{ matrix.version }}-latest
-          path: ./${{ matrix.version }}
-          
-      - name: Get short tag name
-        uses: jungwinter/split@v1
-        id: split
-        with:
-          msg: ${{ github.ref }}
-          seperator: /
-      - name: Get release
-        id: get_release_info
-        uses: leahlundqvist/get-release@v1.3.1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          tag_name: ${{ steps.split.outputs._2 }}
+          name: KodularStarter_${{ matrix.os == 'Windows' && 'Windows.exe' || matrix.os }}
+          path: ./${{ matrix.os }}
 
       - name: Upload release binary
-        if: matrix.version == 'windows'
         uses: actions/upload-release-asset@v1.0.2
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ./${{ matrix.version }}/KodularStarter.exe
-          asset_name: KodularStarter_${{ matrix.os }}.exe
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ./${{ matrix.os }}/KodularStarter_${{ matrix.os == 'Windows' && 'Windows.exe' || matrix.os }}
+          asset_name: KodularStarter_${{ matrix.os == 'Windows' && 'Windows.exe' || matrix.os }}
           asset_content_type: application/octet-stream
-
-      - name: Upload release binary
-        if: matrix.version != 'windows'
-        uses: actions/upload-release-asset@v1.0.2
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ./${{ matrix.version }}/KodularStarter
-          asset_name: KodularStarter_${{ matrix.os }}
-          asset_content_type: application/x-pie-executable
