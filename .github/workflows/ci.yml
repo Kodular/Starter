@@ -72,7 +72,7 @@ jobs:
 
     strategy:
       matrix:
-        version: [ubuntu, windows, macOS]    
+        version: [Linux, Windows, macOS]    
 
     steps:
       - uses: actions/checkout@v1
