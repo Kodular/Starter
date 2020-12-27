@@ -42,6 +42,7 @@ jobs:
         run: |
           mkdir out
           v -prod -o out/$EXE_NAME KodularStarter.v
+        shell: bash
 
       - name: Set metadata to exe
         if: matrix.os_name == 'Windows'
