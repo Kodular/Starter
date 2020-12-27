@@ -36,7 +36,7 @@ jobs:
         with:
           v-version: latest
 
-      - name: Build executable\
+      - name: Build executable
         env:
           EXE_NAME: ${{ matrix.exe_name }}
         run: |
