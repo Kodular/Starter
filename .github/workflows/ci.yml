@@ -14,9 +14,18 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        include:
+          - os: ubuntu-latest
+            os_name: Linux
+            exe_name: KodularStarter_linux
+          - os: windows-latest
+            os_name: Windows
+            exe_name: KodularStarter_windows.exe
+          - os: macOS-latest
+            os_name: macOS
+            exe_name: KodularStarter_macos
 
-    name: Build on ${{ matrix.os }}
+    name: Build on ${{ matrix.os_name }}
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -27,23 +36,24 @@ jobs:
         with:
           v-version: latest
 
-      - name: Build executable
+      - name: Build executable\
+        env:
+          EXE_NAME: ${{ matrix.exe_name }}
         run: |
           mkdir out
-          v -prod -o out/KodularStarter KodularStarter.v
-
-      - name: Set executable bit
-        if: matrix.os != 'windows-latest'
-        run: chmod +x ./out/KodularStarter
+          v -prod -o out/$EXE_NAME KodularStarter.v
 
       - name: Set metadata to exe
-        if: matrix.os == 'windows-latest'
-        run: ./ext/rcedit-x64.exe out/KodularStarter.exe --set-icon icon.ico --set-file-version 2 --set-product-version 2 --set-version-string "ProductName" "Kodular Starter"
+        if: matrix.os_name == 'Windows'
+        env:
+          EXE_NAME: ${{ matrix.exe_name }}
+        run: '"ext/rcedit-x64.exe" "out/%EXE_NAME%" --set-icon icon.ico --set-file-version 2 --set-product-version 2 --set-version-string "ProductName" "Kodular Starter"'
+        shell: cmd
 
       - uses: actions/upload-artifact@v2
         with:
-          name: KodularStarter_${{ runner.os == 'Windows' && 'Windows.exe' || runner.os }}
-          path: out/*
+          name: ${{ matrix.exe_name }}
+          path: out/${{ matrix.exe_name }}
           
   release:
     name: Create GitHub release
@@ -81,16 +91,19 @@ jobs:
 
     strategy:
       matrix:
-        os: [Linux, Windows, macOS]    
+        exe_name: [KodularStarter_linux, KodularStarter_windows.exe, KodularStarter_macos]
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Fetch artifacts
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
-          name: KodularStarter_${{ matrix.os == 'Windows' && 'Windows.exe' || matrix.os }}
-          path: ./${{ matrix.os }}
+          name: ${{ matrix.exe_name }}
+          
+      - name: Set executable bit
+        if: matrix.exe_name != 'KodularStarter_windows.exe'
+        run: chmod +x ./${{ matrix.exe_name }}
 
       - name: Upload release binary
         uses: actions/upload-release-asset@v1.0.2
@@ -98,6 +111,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./${{ matrix.os }}/KodularStarter_${{ matrix.os == 'Windows' && 'Windows.exe' || matrix.os }}
-          asset_name: KodularStarter_${{ matrix.os == 'Windows' && 'Windows.exe' || matrix.os }}
+          asset_path: ./${{ matrix.exe_name }}
+          asset_name: ${{ matrix.exe_name }}
           asset_content_type: application/octet-stream
