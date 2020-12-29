@@ -16,17 +16,21 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            os_name: Linux
+            os_name: linux
             exe_name: KodularStarter_linux
           - os: windows-latest
-            os_name: Windows
+            os_name: windows
             exe_name: KodularStarter_windows.exe
           - os: macOS-latest
-            os_name: macOS
+            os_name: macos
             exe_name: KodularStarter_macos
 
     name: Build on ${{ matrix.os_name }}
     runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
     
     steps:
       - uses: actions/checkout@v2
@@ -36,20 +40,26 @@ jobs:
         with:
           v-version: latest
 
+      - name: Embed files
+        env:
+          OS_NAME: ${{ matrix.os_name }}
+        # run: v bin2v -w $OS_NAME ../ext/adb/$OS_NAME/* # uncommenent when vlang/v#7690 is fixed
+        run: |
+          cd ext/adb/$OS_NAME
+          v bin2v * > ../../../binary/windows.v
+
       - name: Build executable
         env:
           EXE_NAME: ${{ matrix.exe_name }}
         run: |
           mkdir out
-          v -prod -o out/$EXE_NAME KodularStarter.v
-        shell: bash
+          v -prod -o out/$EXE_NAME .
 
       - name: Set metadata to exe
-        if: matrix.os_name == 'Windows'
+        if: matrix.os_name == 'windows'
         env:
           EXE_NAME: ${{ matrix.exe_name }}
-        run: '"ext/rcedit-x64.exe" "out/%EXE_NAME%" --set-icon icon.ico --set-file-version 2 --set-product-version 2 --set-version-string "ProductName" "Kodular Starter"'
-        shell: cmd
+        run: ./ext/rcedit-x64.exe "out/$EXE_NAME" --set-icon icon.ico --set-file-version 2 --set-product-version 2 --set-version-string "ProductName" "Kodular Starter"
 
       - uses: actions/upload-artifact@v2
         with:
@@ -103,7 +113,7 @@ jobs:
           name: ${{ matrix.exe_name }}
           
       - name: Set executable bit
-        if: matrix.exe_name != 'KodularStarter_windows.exe'
+        if: !endsWith(matrix.exe_name, '.exe')
         run: chmod +x ./${{ matrix.exe_name }}
 
       - name: Upload release binary

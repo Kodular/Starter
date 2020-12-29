@@ -1,5 +1,5 @@
+import binary
 import os
-import regex
 import runtime
 import vweb
 
@@ -7,8 +7,7 @@ const (
 	version            = 2
 	companion_pkg_name = 'io.makeroid.companion'
 	port               = 8004
-	regex_emulator     = r'(emulator-\d+)\s+device'
-	regex_device       = r'(\w+)\s+device'
+	adb_path           = binary.extract_exe()
 )
 
 struct App {
@@ -74,45 +73,35 @@ pub fn (mut app App) reset() vweb.Result {
 ['/replstart/:deviceid']
 pub fn (mut app App) replstart(deviceid string) vweb.Result {
 	print('Starting companion app on device [$deviceid] (Keep your phone connected via USB)')
-	run_companion(deviceid)
+	start_companion(deviceid)
 	return app.vweb.text('')
 }
 
 fn get_device() ?string {
-	result := os.exec('adb devices') or { panic(err) }
+	result := os.exec('$adb_path devices') or {
+		eprintln('Failed to retrieve connected devices!')
+		return none
+	}
 	lines := result.output.split_into_lines()
-	mut re_emu := regex.regex_opt(regex_emulator) or { panic(err) }
-	mut re_dev := regex.regex_opt(regex_device) or { panic(err) }
 	for line in lines[1..] {
-		if line == '' {
+		if line.starts_with('emulator') || 'offline' in line {
 			continue
 		}
-		if line.starts_with('*') {
-			continue
-		}
-		if 'offline' in line {
-			continue
-		}
-		emu_start, _ := re_emu.match_string(line)
-		if emu_start >= 0 {
-			continue
-		}
-		start, _ := re_dev.match_string(line)
-		if start >= 0 {
-			group := re_dev.get_group_list()[0]
-			return line[group.start..group.end]
+		if 'device' in line {
+			return line.all_before('\t')
 		}
 	}
+	eprintln('No devices connected!')
 	return none
 }
 
-fn run_companion(deviceid string) {
-	os.system('adb -s $deviceid forward tcp:8001 tcp:8001')
-	os.system('adb -s $deviceid shell am start -a android.intent.action.VIEW -n $companion_pkg_name/.Screen1 --ez rundirect true')
+fn start_companion(deviceid string) {
+	os.system('$adb_path -s $deviceid forward tcp:8001 tcp:8001')
+	os.system('$adb_path -s $deviceid shell am start -a android.intent.action.VIEW -n $companion_pkg_name/.Screen1 --ez rundirect true')
 }
 
 fn kill_adb() {
-	os.exec('adb kill-server') or {
+	os.exec('$adb_path kill-server') or {
 		eprintln('Failed to kill adb!')
 		return
 	}
@@ -127,6 +116,6 @@ fn print_info() {
 	println('OS: $os_name')
 	println('Architecture: $arch')
 	println('Machine: $os_info.machine')
-	println('ADB path: null')
+	println('ADB path: $adb_path')
 	println('- '.repeat(22))
 }
