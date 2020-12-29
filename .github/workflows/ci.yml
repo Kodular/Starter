@@ -113,7 +113,7 @@ jobs:
           name: ${{ matrix.exe_name }}
           
       - name: Set executable bit
-        if: !endsWith(matrix.exe_name, '.exe')
+        if: endsWith(matrix.exe_name, '.exe') == false
         run: chmod +x ./${{ matrix.exe_name }}
 
       - name: Upload release binary
