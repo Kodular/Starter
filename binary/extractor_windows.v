@@ -1,5 +1,7 @@
 module binary
 
+import os
+
 fn extract_adbwinapidll(temp_dir string) {
 	mut arr := []byte{len: adbwinapi_dll_len}
 	unsafe {C.memcpy(arr.data, adbwinapi_dll, adbwinapi_dll_len)}
