@@ -25,9 +25,10 @@ pub fn extract_exe() string {
 		mut arr := []byte{len: adb_len}
 		unsafe {C.memcpy(arr.data, adb, adb_len)}
 		exe_path := os.join_path(temp_dir, 'adb')
-		mut f := os.open_file(exe_path, 'wb+') or { panic(err) } // set executable?
+		mut f := os.open_file(exe_path, 'wb+') or { panic(err) }
 		f.write(arr)
 		f.close()
+		os.system('chmod +x $exe_path')
 		return exe_path
 	}
 }
