@@ -43,7 +43,7 @@ jobs:
       - name: Embed files
         env:
           OS_NAME: ${{ matrix.os_name }}
-        # run: v bin2v -w $OS_NAME ../ext/adb/$OS_NAME/* # uncommenent when vlang/v#7690 is fixed
+        # run: v bin2v -w $OS_NAME ../resources/adb/$OS_NAME/* # uncommenent when vlang/v#7690 is fixed
         run: |
           cd ext/adb/$OS_NAME
           v bin2v * > ../../../binary/windows.v
@@ -54,12 +54,6 @@ jobs:
         run: |
           mkdir out
           v -prod -o out/$EXE_NAME .
-
-      - name: Set metadata to exe
-        if: matrix.os_name == 'windows'
-        env:
-          EXE_NAME: ${{ matrix.exe_name }}
-        run: ./ext/rcedit-x64.exe "out/$EXE_NAME" --set-icon icon.ico --set-file-version 2 --set-product-version 2 --set-version-string "ProductName" "Kodular Starter"
 
       - uses: actions/upload-artifact@v2
         with:

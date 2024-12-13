@@ -86,8 +86,17 @@ async fn replstart(deviceid: String) -> impl IntoResponse {
 }
 
 async fn get_device() -> Option<String> {
-    let mut server = ADBServer::default();
-    server.get
+    let mut adb_server = ADBServer::default();
+
+    for device in adb_server.devices().unwrap() {
+        println!("[INFO] Device: {} ({})", device.identifier, device.state);
+    }
+
+    if adb_server.devices().unwrap().is_empty() {
+        return None;
+    }
+
+    adb_server.devices().unwrap().first().map(|device| device.identifier.clone())
 }
 
 async fn start_companion(deviceid: &str) {
