@@ -10,10 +10,11 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "@tanstack/react-query": "^5.62.7",
     "@tauri-apps/api": "^2.1.1",
-    "@tauri-apps/plugin-opener": "^2.2.1"
+    "@tauri-apps/plugin-opener": "^2.2.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.1",
