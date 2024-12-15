@@ -20,7 +20,8 @@ export function useServerStatus() {
   return data;
 }
 
-type DeviceInfo = {
+export type DeviceInfo = {
+  transport: "USB" | "TCP";
   serial_no: string;
   model: string;
   android_version: string;

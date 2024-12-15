@@ -1,7 +1,6 @@
-import {useDeviceInfo, useServerStatus} from "./hooks.ts";
+import {type DeviceInfo, useDeviceInfo, useServerStatus} from "./hooks.ts";
 
 function App() {
-  const isServerRunning = useServerStatus();
   const deviceInfo = useDeviceInfo();
 
   return (
@@ -11,22 +10,14 @@ function App() {
         <h1 style={{color: '#4629a0', margin: 0}}>Kodular Starter</h1>
       </header>
       <main>
-        {isServerRunning ? (
-          <p>Local server is running</p>
-        ) : (
-          <p>Local server is not running</p>
-        )}
+        <LocalServerStatus/>
         {
           deviceInfo ? (
             <div>
-              <p>Device is connected via USB</p>
-              <h4>Device Info</h4>
-              <p>Serial No: {deviceInfo?.serial_no}</p>
-              <p>Model: {deviceInfo?.model}</p>
-              <p>Android Version: {deviceInfo?.android_version}</p>
-              <p>SDK Version: {deviceInfo?.sdk_version}</p>
+              <p>Device is connected via {deviceInfo.transport === "USB" ? "USB" : "WiFi"}</p>
+              <DeviceInfo deviceInfo={deviceInfo}/>
             </div>
-          ): (
+          ) : (
             <div>
               <p>Connect your device via USB to see device info</p>
             </div>
@@ -42,6 +33,34 @@ function App() {
       </footer>
     </div>
   );
+}
+
+function LocalServerStatus() {
+  const isServerRunning = useServerStatus();
+
+  return (
+    <div className="local-server-status" data-running={isServerRunning}>
+      {isServerRunning ? (
+        <p>Local server is running</p>
+      ) : (
+        <p>Local server is not running</p>
+      )}
+    </div>
+  )
+}
+
+function DeviceInfo({deviceInfo}: { deviceInfo: DeviceInfo }) {
+  return (
+    <div className="card">
+      <h4 className="title">Device Info</h4>
+      <div className="body">
+        <p>Serial No: {deviceInfo.serial_no}</p>
+        <p>Model: {deviceInfo.model}</p>
+        <p>Android Version: {deviceInfo.android_version}</p>
+        <p>SDK Version: {deviceInfo.sdk_version}</p>
+      </div>
+    </div>
+  )
 }
 
 export default App;

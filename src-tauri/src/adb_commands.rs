@@ -1,10 +1,17 @@
 use adb_client::{ADBDeviceExt, ADBUSBDevice};
+use serde::Serialize;
 use std::io::stdout;
 use std::str::from_utf8;
-use serde::Serialize;
+
+#[derive(Serialize)]
+pub(crate) enum DeviceTransport {
+    USB,
+    TCP,
+}
 
 #[derive(Serialize)]
 pub(crate) struct DeviceInfo {
+    transport: DeviceTransport,
     serial_no: String,
     model: String,
     android_version: String,
@@ -50,6 +57,7 @@ pub(crate) fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, (
     let sdk_version = get_device_sdk_version(device).unwrap();
 
     Ok(DeviceInfo {
+        transport: DeviceTransport::USB,
         serial_no,
         model,
         android_version,
