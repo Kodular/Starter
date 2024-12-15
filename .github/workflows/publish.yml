@@ -8,7 +8,7 @@ jobs:
     permissions:
       contents: write
     strategy:
-      fails-fast: false
+      fail-fast: false
       matrix:
         include:
           - platform: ubuntu-latest
