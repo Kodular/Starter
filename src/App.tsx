@@ -1,53 +1,46 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
-import {LocalServerStatus} from "./components/LocalServerStatus.tsx";
+import {useDeviceInfo, useServerStatus} from "./hooks.ts";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  const isServerRunning = useServerStatus();
+  const deviceInfo = useDeviceInfo();
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <div className="app-shell">
+      <header>
+        <img src="/logo-circle-512.png" alt="Kodular Logo" style={{height: 36, width: 36}}/>
+        <h1 style={{color: '#4629a0', margin: 0}}>Kodular Starter</h1>
+      </header>
+      <main>
+        {isServerRunning ? (
+          <p>Local server is running</p>
+        ) : (
+          <p>Local server is not running</p>
+        )}
+        {
+          deviceInfo ? (
+            <div>
+              <p>Device is connected via USB</p>
+              <h4>Device Info</h4>
+              <p>Serial No: {deviceInfo?.serial_no}</p>
+              <p>Model: {deviceInfo?.model}</p>
+              <p>Android Version: {deviceInfo?.android_version}</p>
+              <p>SDK Version: {deviceInfo?.sdk_version}</p>
+            </div>
+          ): (
+            <div>
+              <p>Connect your device via USB to see device info</p>
+            </div>
+          )
+        }
 
-      <LocalServerStatus />
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+      </main>
+      <footer>
+        <p>© Junnovate LLC</p>
+        <div style={{flexGrow: 1}}/>
+        <a href="https://docs.kodular.io/guides/live-development/usb/" target="_blank">Guide</a>
+        <a href="https://github.com/Kodular/Starter" target="_blank">Source Code</a>
+      </footer>
+    </div>
   );
 }
 

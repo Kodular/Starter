@@ -1,6 +1,15 @@
 use adb_client::{ADBDeviceExt, ADBUSBDevice};
 use std::io::stdout;
 use std::str::from_utf8;
+use serde::Serialize;
+
+#[derive(Serialize)]
+pub(crate) struct DeviceInfo {
+    serial_no: String,
+    model: String,
+    android_version: String,
+    sdk_version: String,
+}
 
 const COMPANION_PKG_NAME: &str = "io.makeroid.companion";
 
@@ -8,14 +17,44 @@ pub(crate) fn get_connected_device() -> Option<ADBUSBDevice> {
     ADBUSBDevice::autodetect().ok()
 }
 
-pub(crate) fn get_device_serial(device: &mut ADBUSBDevice) -> Option<String> {
+fn getprop_from_device(device: &mut ADBUSBDevice, property: &str) -> Option<String> {
     let mut buf: Vec<u8> = Vec::new();
-    device
-        .shell_command(["getprop", "ro.serialno"], &mut buf)
-        .unwrap();
-    let serial_no = from_utf8(buf.as_slice()).unwrap().trim();
 
-    Some(serial_no.to_string())
+    device
+        .shell_command(["getprop", property], &mut buf)
+        .unwrap();
+
+    Some(from_utf8(buf.as_slice()).unwrap().trim().to_string())
+}
+
+pub(crate) fn get_device_serial(device: &mut ADBUSBDevice) -> Option<String> {
+    getprop_from_device(device, "ro.serialno")
+}
+
+pub(crate) fn get_device_model(device: &mut ADBUSBDevice) -> Option<String> {
+    getprop_from_device(device, "ro.product.model")
+}
+
+pub(crate) fn get_device_android_version(device: &mut ADBUSBDevice) -> Option<String> {
+    getprop_from_device(device, "ro.build.version.release")
+}
+
+pub(crate) fn get_device_sdk_version(device: &mut ADBUSBDevice) -> Option<String> {
+    getprop_from_device(device, "ro.build.version.sdk")
+}
+
+pub(crate) fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, ()> {
+    let serial_no = get_device_serial(device).unwrap();
+    let model = get_device_model(device).unwrap();
+    let android_version = get_device_android_version(device).unwrap();
+    let sdk_version = get_device_sdk_version(device).unwrap();
+
+    Ok(DeviceInfo {
+        serial_no,
+        model,
+        android_version,
+        sdk_version,
+    })
 }
 
 pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
@@ -54,31 +93,12 @@ mod tests {
     fn test_get_device_info() {
         let mut device = get_connected_device().unwrap();
 
-        let mut serial_no = Vec::new();
-        let mut model = Vec::new();
-        let mut release = Vec::new();
-        let mut sdk_version = Vec::new();
+        let device_info = get_device_info(&mut device);
 
-        device
-            .shell_command(["getprop", "ro.serialno"], &mut serial_no)
-            .unwrap();
-
-        device
-            .shell_command(["getprop", "ro.product.model"], &mut model)
-            .unwrap();
-
-        device
-            .shell_command(["xgetprop", "ro.build.version.release"], &mut release)
-            .unwrap();
-
-        device
-            .shell_command(["getprop", "ro.build.version.sdk"], &mut sdk_version)
-            .unwrap();
-
-        println!("Serial No: {:?}", from_utf8(serial_no.as_slice()));
-        println!("Model: {:?}", from_utf8(model.as_slice()));
-        println!("Release: {:?}", from_utf8(release.as_slice()));
-        println!("SDK Version: {:?}", from_utf8(sdk_version.as_slice()));
+        println!("Serial No: {:?}", device_info.serial_no);
+        println!("Model: {:?}", device_info.model);
+        println!("Android Version: {:?}", device_info.android_version);
+        println!("SDK Version: {:?}", device_info.sdk_version);
     }
 
     #[test]

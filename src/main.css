@@ -1,0 +1,41 @@
+* {
+    margin: 0;
+    box-sizing: border-box;
+
+    user-select: none;
+}
+
+body {
+    font-family: 'Jost Variable', sans-serif;
+}
+
+.app-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+
+    & > * {
+        padding: 0.5rem;
+    }
+
+    header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    main {
+        flex-grow: 1;
+    }
+
+    footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+
+        border-top: 1px solid #e0e0e0;
+    }
+}
