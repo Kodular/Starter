@@ -1,4 +1,5 @@
 import {type DeviceInfo, useDeviceInfo, useServerStatus} from "./hooks.ts";
+import tauriConfJson from "../src-tauri/tauri.conf.json";
 
 function App() {
   const deviceInfo = useDeviceInfo();
@@ -7,7 +8,7 @@ function App() {
     <div className="app-shell">
       <header>
         <img src="/logo-circle-512.png" alt="Kodular Logo" style={{height: 36, width: 36}}/>
-        <h1 style={{color: '#4629a0', margin: 0}}>Kodular Starter</h1>
+        <h1 style={{color: '#4629a0', margin: 0}}>Kodular Starter {tauriConfJson.version}</h1>
       </header>
       <main>
         <LocalServerStatus/>
