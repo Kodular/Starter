@@ -28,3 +28,10 @@ tracing-subscriber = "0.3.19"
 tower-http = { version = "0.6.2", features = ["cors", "normalize-path"] }
 tower = "0.5.2"
 adb_client = "2.0.6"
+
+[profile.release]
+panic = "abort" # Strip expensive panic clean-up logic
+codegen-units = 1 # Compile crates one after another so the compiler can optimize better
+lto = true # Enables link to optimizations
+opt-level = "s" # Optimize for binary size
+strip = true # Remove debug symbols
