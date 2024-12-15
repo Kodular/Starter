@@ -15,15 +15,12 @@ jobs:
         include:
           - platform: ubuntu-latest
             os_name: linux
-            exe_name: KodularStarter-linux
             args: ''
           - platform: windows-latest
             os_name: windows
-            exe_name: KodularStarter-windows.exe
             args: ''
           - platform: macOS-latest
             os_name: macos
-            exe_name: KodularStarter-macos
             args: '--target aarch64-apple-darwin'
 
     name: Building for ${{ matrix.os_name }}
