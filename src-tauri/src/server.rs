@@ -30,6 +30,7 @@ pub(crate) async fn launch_server() {
                     "https://creator.kodular.io".parse::<HeaderValue>().unwrap(),
                     "https://c.kodular.io".parse::<HeaderValue>().unwrap(),
                     "http://tauri.localhost".parse::<HeaderValue>().unwrap(),
+                    "tauri://localhost".parse::<HeaderValue>().unwrap(),
                     "http://localhost:1420".parse::<HeaderValue>().unwrap(),
                 ])
                 .allow_methods([Method::GET])
