@@ -27,11 +27,13 @@ pub(crate) fn get_connected_device() -> Option<ADBUSBDevice> {
 fn getprop_from_device(device: &mut ADBUSBDevice, property: &str) -> Option<String> {
     let mut buf: Vec<u8> = Vec::new();
 
-    device
-        .shell_command(["getprop", property], &mut buf)
-        .unwrap();
-
-    Some(from_utf8(buf.as_slice()).unwrap().trim().to_string())
+    match device.shell_command(["getprop", property], &mut buf) {
+        Ok(..) => match from_utf8(buf.as_slice()) {
+            Ok(data) => Some(data.trim().to_string()),
+            Err(..) => None,
+        },
+        Err(..) => None,
+    }
 }
 
 pub(crate) fn get_device_serial(device: &mut ADBUSBDevice) -> Option<String> {
@@ -51,45 +53,47 @@ pub(crate) fn get_device_sdk_version(device: &mut ADBUSBDevice) -> Option<String
 }
 
 pub(crate) fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, ()> {
-    let serial_no = get_device_serial(device).unwrap();
-    let model = get_device_model(device).unwrap();
-    let android_version = get_device_android_version(device).unwrap();
-    let sdk_version = get_device_sdk_version(device).unwrap();
-
-    Ok(DeviceInfo {
-        transport: DeviceTransport::USB,
-        serial_no,
-        model,
-        android_version,
-        sdk_version,
-    })
+    if let Some(serial_no) = get_device_serial(device) {
+        if let Some(model) = get_device_model(device) {
+            if let Some(android_version) = get_device_android_version(device) {
+                if let Some(sdk_version) = get_device_sdk_version(device) {
+                    return Ok(DeviceInfo {
+                        transport: DeviceTransport::USB,
+                        serial_no,
+                        model,
+                        android_version,
+                        sdk_version,
+                    });
+                }
+            }
+        }
+    }
+    Err(())
 }
 
 pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
-    let mut device = get_connected_device().unwrap();
-    let serial_no = get_device_serial(&mut device).unwrap();
+    if let Some(mut device) = get_connected_device() {
+        if let Some(serial_no) = get_device_serial(&mut device) {
+            if serial_no != device_serial {
+                return Err(());
+            }
 
-    if serial_no != device_serial {
-        return Err(());
+            let _ = device.shell_command(
+                [
+                    "am",
+                    "start",
+                    "-a",
+                    "android.intent.action.MAIN",
+                    "-n",
+                    &format!("{}/.Screen1", COMPANION_PKG_NAME),
+                    "--ez",
+                    "rundirect",
+                    "true",
+                ],
+                stdout(),
+            );
+        }
     }
-
-    device
-        .shell_command(
-            [
-                "am",
-                "start",
-                "-a",
-                "android.intent.action.MAIN",
-                "-n",
-                &format!("{}/.Screen1", COMPANION_PKG_NAME),
-                "--ez",
-                "rundirect",
-                "true",
-            ],
-            stdout(),
-        )
-        .unwrap();
-
     Ok(())
 }
 
@@ -99,25 +103,22 @@ mod tests {
 
     #[test]
     fn test_get_device_info() {
-        let mut device = get_connected_device().unwrap();
-
-        let device_info = get_device_info(&mut device);
-
-        println!("Serial No: {:?}", device_info.serial_no);
-        println!("Model: {:?}", device_info.model);
-        println!("Android Version: {:?}", device_info.android_version);
-        println!("SDK Version: {:?}", device_info.sdk_version);
+        if let Some(mut device) = get_connected_device() {
+            if let Ok(device_info) = get_device_info(&mut device) {
+                println!("Serial No: {:?}", device_info.serial_no);
+                println!("Model: {:?}", device_info.model);
+                println!("Android Version: {:?}", device_info.android_version);
+                println!("SDK Version: {:?}", device_info.sdk_version);
+            }
+        }
     }
 
     #[test]
     fn test_start_companion() {
-        match get_connected_device() {
-            Some(mut device) => {
-                let serial_no = get_device_serial(&mut device).unwrap();
-
+        if let Some(mut device) = get_connected_device() {
+            if let Some(serial_no) = get_device_serial(&mut device) {
                 start_companion(&serial_no).unwrap();
             }
-            None => {}
-        };
+        }
     }
 }

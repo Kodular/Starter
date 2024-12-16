@@ -54,11 +54,12 @@ async fn ping() -> impl IntoResponse {
 }
 
 async fn device_connection_status() -> impl IntoResponse {
-    let mut device = get_connected_device().unwrap();
-    match get_device_serial(&mut device) {
-        Some(device) => Json(json!({ "status": "OK", "version": VERSION, "device": device })),
-        None => Json(json!({ "status": "NO", "version": VERSION })),
+    if let Some(mut device) = get_connected_device() {
+        if let Some(serial) = get_device_serial(&mut device) {
+            return Json(json!({ "status": "OK", "version": VERSION, "device": serial }));
+        }
     }
+    Json(json!({ "status": "NO", "version": VERSION }))
 }
 
 async fn launch_companion_app_on_device(Path(deviceid): Path<String>) -> impl IntoResponse {
