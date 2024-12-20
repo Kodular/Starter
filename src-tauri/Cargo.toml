@@ -27,7 +27,7 @@ tokio = { version = "1.42.0", features = ["full"] }
 tracing-subscriber = "0.3.19"
 tower-http = { version = "0.6.2", features = ["cors", "normalize-path"] }
 tower = "0.5.2"
-adb_client = "2.0.6"
+adb_client = "2.1.0"
 
 [profile.release]
 panic = "abort" # Strip expensive panic clean-up logic

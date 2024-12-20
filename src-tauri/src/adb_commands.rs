@@ -21,13 +21,20 @@ pub(crate) struct DeviceInfo {
 const COMPANION_PKG_NAME: &str = "io.makeroid.companion";
 
 pub(crate) fn get_connected_device() -> Option<ADBUSBDevice> {
-    ADBUSBDevice::autodetect().ok()
+    let autodetect = ADBUSBDevice::autodetect();
+    match autodetect {
+        Ok(device) => Some(device),
+        Err(what) => {
+            println!("Error: {:?}", what);
+            None
+        },
+    }
 }
 
 fn getprop_from_device(device: &mut ADBUSBDevice, property: &str) -> Option<String> {
     let mut buf: Vec<u8> = Vec::new();
 
-    match device.shell_command(["getprop", property], &mut buf) {
+    match device.shell_command(&["getprop", property], &mut buf) {
         Ok(..) => match from_utf8(buf.as_slice()) {
             Ok(data) => Some(data.trim().to_string()),
             Err(..) => None,
@@ -79,7 +86,7 @@ pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
             }
 
             let _ = device.shell_command(
-                [
+                &[
                     "am",
                     "start",
                     "-a",
@@ -90,7 +97,7 @@ pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
                     "rundirect",
                     "true",
                 ],
-                stdout(),
+                &mut stdout(),
             );
         }
     }
