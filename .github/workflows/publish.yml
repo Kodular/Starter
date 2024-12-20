@@ -17,9 +17,12 @@ jobs:
           - platform: windows-latest
             os_name: windows
             args: ''
-          - platform: macOS-latest
-            os_name: macos
+          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+            os_name: macos (ARM)
             args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest' # for Intel based macs.
+            os_name: macos (Intel)
+            args: '--target x86_64-apple-darwin'
 
     name: Building for ${{ matrix.os_name }}
     runs-on: ${{ matrix.platform }}
@@ -35,6 +38,9 @@ jobs:
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
+        with:
+          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
