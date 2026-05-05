@@ -1,4 +1,4 @@
-use adb_client::{ADBDeviceExt, ADBUSBDevice};
+use adb_client::{ADBDeviceExt, usb::ADBUSBDevice};
 use serde::Serialize;
 use std::io::stdout;
 use std::str::from_utf8;
@@ -27,14 +27,14 @@ pub(crate) fn get_connected_device() -> Option<ADBUSBDevice> {
         Err(what) => {
             println!("Error: {:?}", what);
             None
-        },
+        }
     }
 }
 
 fn getprop_from_device(device: &mut ADBUSBDevice, property: &str) -> Option<String> {
     let mut buf: Vec<u8> = Vec::new();
 
-    match device.shell_command(&["getprop", property], &mut buf) {
+    match device.shell_command(&format!("getprop {}", property), Some(&mut buf), None) {
         Ok(..) => match from_utf8(buf.as_slice()) {
             Ok(data) => Some(data.trim().to_string()),
             Err(..) => None,
@@ -60,46 +60,38 @@ pub(crate) fn get_device_sdk_version(device: &mut ADBUSBDevice) -> Option<String
 }
 
 pub(crate) fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, ()> {
-    if let Some(serial_no) = get_device_serial(device) {
-        if let Some(model) = get_device_model(device) {
-            if let Some(android_version) = get_device_android_version(device) {
-                if let Some(sdk_version) = get_device_sdk_version(device) {
-                    return Ok(DeviceInfo {
-                        transport: DeviceTransport::USB,
-                        serial_no,
-                        model,
-                        android_version,
-                        sdk_version,
-                    });
-                }
-            }
-        }
+    if let Some(serial_no) = get_device_serial(device)
+        && let Some(model) = get_device_model(device)
+        && let Some(android_version) = get_device_android_version(device)
+        && let Some(sdk_version) = get_device_sdk_version(device)
+    {
+        return Ok(DeviceInfo {
+            transport: DeviceTransport::USB,
+            serial_no,
+            model,
+            android_version,
+            sdk_version,
+        });
     }
     Err(())
 }
 
 pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
-    if let Some(mut device) = get_connected_device() {
-        if let Some(serial_no) = get_device_serial(&mut device) {
-            if serial_no != device_serial {
-                return Err(());
-            }
-
-            let _ = device.shell_command(
-                &[
-                    "am",
-                    "start",
-                    "-a",
-                    "android.intent.action.MAIN",
-                    "-n",
-                    &format!("{}/.Screen1", COMPANION_PKG_NAME),
-                    "--ez",
-                    "rundirect",
-                    "true",
-                ],
-                &mut stdout(),
-            );
+    if let Some(mut device) = get_connected_device()
+        && let Some(serial_no) = get_device_serial(&mut device)
+    {
+        if serial_no != device_serial {
+            return Err(());
         }
+
+        let _ = device.shell_command(
+            &format!(
+                "am start -a android.intent.action.MAIN -n {}/.Screen1 --ez rundirect true",
+                COMPANION_PKG_NAME
+            ),
+            Some(&mut stdout()),
+            None,
+        );
     }
     Ok(())
 }
