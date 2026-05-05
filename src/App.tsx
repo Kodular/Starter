@@ -27,7 +27,7 @@ function App() {
 
       </main>
       <footer>
-        <p>© Junnovate LLC</p>
+        <p>© Junnovate Limited</p>
         <div style={{flexGrow: 1}}/>
         <a href="https://docs.kodular.io/guides/live-development/usb/" target="_blank">Guide</a>
         <a href="https://github.com/Kodular/Starter" target="_blank">Source Code</a>
