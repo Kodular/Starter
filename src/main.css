@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "@fontsource-variable/jost";
 
+html, body {
+  overscroll-behavior: none;
+}
+
 @theme {
   --font-sans: 'Jost Variable', sans-serif;
   --color-primary: #4629a0;
