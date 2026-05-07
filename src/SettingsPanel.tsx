@@ -16,6 +16,10 @@ export function SettingsPanel({onClose}: { onClose: () => void }) {
   const [saved, setSaved] = useState(false);
   const [detectedPath, setDetectedPath] = useState<string | null>(null);
 
+  function refreshDetectedPath() {
+    invoke<string | null>('detect_adb_path').then(setDetectedPath);
+  }
+
   useEffect(() => {
     invoke<AppSettings>('get_settings').then((settings) => {
       setMode(settings.adb_mode);
@@ -23,10 +27,6 @@ export function SettingsPanel({onClose}: { onClose: () => void }) {
     });
     refreshDetectedPath();
   }, []);
-
-  function refreshDetectedPath() {
-    invoke<string | null>('detect_adb_path').then(setDetectedPath);
-  }
 
   async function handleBrowse() {
     const path = await invoke<string | null>('pick_adb_path');
