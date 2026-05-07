@@ -16,8 +16,10 @@
     "@tanstack/react-query": "^5.100.9",
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/plugin-opener": "^2.5.4",
+    "clsx": "^2.1.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.4"
   },
   "devDependencies": {

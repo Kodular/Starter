@@ -42,7 +42,7 @@ export function SettingsPanel({onClose}: { onClose: () => void }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white border-t border-gray-200">
+    <div className="flex-1 flex flex-col bg-white">
       <form className="flex-1 flex flex-col p-4 gap-3" onSubmit={handleSave}>
         <div className="flex-1 flex flex-col gap-3">
           <Field label="ADB Mode" htmlFor="adb-mode">
