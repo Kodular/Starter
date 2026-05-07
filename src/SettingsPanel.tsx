@@ -89,7 +89,7 @@ export function SettingsPanel({onClose}: { onClose: () => void }) {
           >Save</button>
           <button
             type="button"
-            className="font-sans text-sm px-4 py-2 bg-transparent border-none cursor-pointer text-gray-500 ml-auto hover:text-primary"
+            className="font-sans text-sm px-4 py-2 bg-transparent border border-gray-300 rounded cursor-pointer text-gray-500 ml-auto hover:bg-gray-100"
             onClick={onClose}
           >Done</button>
         </div>
