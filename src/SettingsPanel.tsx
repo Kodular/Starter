@@ -6,7 +6,7 @@ type AppSettings = {
   custom_adb_path: string | null;
 }
 
-const inputClass = "font-sans text-sm px-2 py-1.5 border border-gray-200 rounded-lg outline-none focus:border-primary disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed w-full";
+const inputClass = "font-sans text-sm px-3 py-2 border border-gray-300 rounded outline-none focus:border-primary disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed w-full";
 
 export function SettingsPanel({onClose}: { onClose: () => void }) {
   const [mode, setMode] = useState<AppSettings['adb_mode']>('auto');
@@ -40,7 +40,7 @@ export function SettingsPanel({onClose}: { onClose: () => void }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-purple-50 border-t-2 border-primary">
+    <div className="flex-1 flex flex-col bg-white border-t border-gray-200">
       <form className="flex-1 flex flex-col p-4 gap-3" onSubmit={handleSave}>
         <div className="flex-1 flex flex-col gap-3">
           <div className="flex flex-col gap-1">
@@ -70,7 +70,7 @@ export function SettingsPanel({onClose}: { onClose: () => void }) {
               />
               <button
                 type="button"
-                className="font-sans text-xs px-3 py-1.5 border border-gray-200 rounded-lg bg-gray-100 cursor-pointer whitespace-nowrap hover:enabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+                className="font-sans text-sm px-3 py-2 border border-gray-300 rounded bg-white text-gray-600 cursor-pointer whitespace-nowrap hover:enabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
                 onClick={handleBrowse}
                 disabled={mode === 'builtin'}
               >Browse…</button>
@@ -81,15 +81,15 @@ export function SettingsPanel({onClose}: { onClose: () => void }) {
             <p className="text-xs text-gray-500 font-mono break-all py-1">{detectedPath ?? 'Not found'}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 pt-3 border-t border-purple-100">
+        <div className="flex items-center gap-2 pt-3 border-t border-gray-200">
           {saved && <span className="text-xs text-green-600">Saved!</span>}
           <button
             type="submit"
-            className="font-sans text-sm px-4 py-1.5 bg-primary text-white border-none rounded-lg cursor-pointer hover:bg-primary-dark"
+            className="font-sans text-sm px-4 py-2 bg-primary text-white border-none rounded cursor-pointer hover:bg-primary-dark"
           >Save</button>
           <button
             type="button"
-            className="font-sans text-sm px-4 py-1.5 bg-transparent border border-purple-100 rounded-lg cursor-pointer text-gray-500 ml-auto hover:bg-primary-light hover:text-primary"
+            className="font-sans text-sm px-4 py-2 bg-transparent border-none cursor-pointer text-gray-500 ml-auto hover:text-primary"
             onClick={onClose}
           >Done</button>
         </div>
