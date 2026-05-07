@@ -2,6 +2,7 @@ import {useState} from "react";
 import {type DeviceInfo, useDeviceInfo, useServerStatus} from "./hooks.ts";
 import tauriConfJson from "../src-tauri/tauri.conf.json";
 import {SettingsPanel} from "./SettingsPanel.tsx";
+import {IconButton} from "./components/IconButton.tsx";
 
 function App() {
   const deviceInfo = useDeviceInfo();
@@ -13,12 +14,7 @@ function App() {
         <img src="/logo-circle-512.png" alt="Kodular Logo" className="h-7 w-7"/>
         <span className="text-sm font-semibold text-primary">Kodular Starter</span>
         <div className="flex-1"/>
-        <button
-          className="bg-transparent border-none cursor-pointer text-xl size-8 flex items-center justify-center rounded text-gray-500 hover:bg-primary-light hover:text-primary data-[active=true]:bg-primary-light data-[active=true]:text-primary"
-          onClick={() => setSettingsOpen(o => !o)}
-          aria-label="Settings"
-          data-active={settingsOpen}
-        >⚙</button>
+        <IconButton onClick={() => setSettingsOpen(o => !o)} aria-label="Settings" active={settingsOpen}>⚙</IconButton>
       </header>
       {settingsOpen ? (
         <SettingsPanel onClose={() => setSettingsOpen(false)}/>
