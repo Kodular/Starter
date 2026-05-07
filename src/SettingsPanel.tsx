@@ -81,8 +81,10 @@ export function SettingsPanel({onClose}: { onClose: () => void }) {
         </div>
         <div className="flex items-center gap-2 pt-3 border-t border-gray-200">
           {saved && <span className="text-xs text-green-600">Saved!</span>}
-          <Button type="submit">Save</Button>
-          <Button type="button" variant="outlined" className="ml-auto" onClick={onClose}>Done</Button>
+          <div className="ml-auto flex gap-2">
+            <Button type="submit">Save</Button>
+            <Button type="button" variant="outlined" onClick={onClose}>Done</Button>
+          </div>
         </div>
       </form>
     </div>

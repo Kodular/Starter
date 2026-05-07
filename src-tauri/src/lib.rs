@@ -29,11 +29,14 @@ fn save_settings(
 }
 
 #[tauri::command]
-fn pick_adb_path(app: tauri::AppHandle) -> Option<String> {
+async fn pick_adb_path(app: tauri::AppHandle) -> Option<String> {
+    let (tx, rx) = tokio::sync::oneshot::channel();
     app.dialog()
         .file()
-        .blocking_pick_file()
-        .map(|p| p.to_string())
+        .pick_file(move |path| {
+            let _ = tx.send(path.map(|p| p.to_string()));
+        });
+    rx.await.ok().flatten()
 }
 
 #[tauri::command]
