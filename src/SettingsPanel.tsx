@@ -1,12 +1,14 @@
 import {useEffect, useState} from "react";
 import {invoke} from "@tauri-apps/api/core";
+import {Button} from "./components/Button.tsx";
+import {Field} from "./components/Field.tsx";
+import {Input} from "./components/Input.tsx";
+import {Select} from "./components/Select.tsx";
 
 type AppSettings = {
   adb_mode: 'auto' | 'system' | 'builtin';
   custom_adb_path: string | null;
 }
-
-const inputClass = "font-sans text-sm px-3 py-1.5 border border-gray-300 rounded outline-none focus:border-primary disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed w-full";
 
 export function SettingsPanel({onClose}: { onClose: () => void }) {
   const [mode, setMode] = useState<AppSettings['adb_mode']>('auto');
@@ -43,55 +45,44 @@ export function SettingsPanel({onClose}: { onClose: () => void }) {
     <div className="flex-1 flex flex-col bg-white border-t border-gray-200">
       <form className="flex-1 flex flex-col p-4 gap-3" onSubmit={handleSave}>
         <div className="flex-1 flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="adb-mode" className="text-xs text-gray-500">ADB Mode</label>
-            <select
+          <Field label="ADB Mode" htmlFor="adb-mode">
+            <Select
               id="adb-mode"
-              className={inputClass}
               value={mode}
               onChange={(e) => setMode(e.target.value as AppSettings['adb_mode'])}
             >
               <option value="auto">Auto (system adb, fallback to built-in)</option>
               <option value="system">System ADB (adb on PATH)</option>
               <option value="builtin">Built-in only (adb_client)</option>
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="adb-path" className="text-xs text-gray-500">Custom ADB Path</label>
+            </Select>
+          </Field>
+          <Field label="Custom ADB Path" htmlFor="adb-path">
             <div className="flex gap-2">
-              <input
+              <Input
                 id="adb-path"
                 type="text"
-                className={inputClass}
                 value={customPath}
                 onChange={(e) => setCustomPath(e.target.value)}
                 disabled={mode === 'builtin'}
                 placeholder={mode === 'builtin' ? 'Not used in built-in mode' : '/usr/local/bin/adb'}
               />
-              <button
+              <Button
                 type="button"
-                className="font-sans text-sm px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-600 cursor-pointer whitespace-nowrap hover:enabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+                variant="outlined"
+                className="px-3 whitespace-nowrap"
                 onClick={handleBrowse}
                 disabled={mode === 'builtin'}
-              >Browse…</button>
+              >Browse…</Button>
             </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-500">Detected ADB</label>
+          </Field>
+          <Field label="Detected ADB">
             <p className="text-xs text-gray-500 font-mono break-all py-1">{detectedPath ?? 'Not found'}</p>
-          </div>
+          </Field>
         </div>
         <div className="flex items-center gap-2 pt-3 border-t border-gray-200">
           {saved && <span className="text-xs text-green-600">Saved!</span>}
-          <button
-            type="submit"
-            className="font-sans text-sm px-4 py-1.5 bg-primary text-white border-none rounded cursor-pointer hover:bg-primary-dark"
-          >Save</button>
-          <button
-            type="button"
-            className="font-sans text-sm px-4 py-1.5 bg-transparent border border-gray-300 rounded cursor-pointer text-gray-500 ml-auto hover:bg-gray-100"
-            onClick={onClose}
-          >Done</button>
+          <Button type="submit">Save</Button>
+          <Button type="button" variant="outlined" className="ml-auto" onClick={onClose}>Done</Button>
         </div>
       </form>
     </div>
