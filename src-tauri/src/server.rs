@@ -2,13 +2,12 @@ use crate::adb_commands::{get_connected_device, get_device_serial, start_compani
 use axum::extract::{Path, Request};
 use axum::http::header::{CONTENT_TYPE, ORIGIN};
 use axum::http::{HeaderValue, Method};
-use axum::{response::IntoResponse, routing::get, Json, Router, ServiceExt};
+use axum::{Json, Router, ServiceExt, response::IntoResponse, routing::get};
 use serde_json::json;
 use tokio::net::TcpListener;
 use tower::Layer;
 use tower_http::cors::CorsLayer;
 use tower_http::normalize_path::NormalizePathLayer;
-use tracing_subscriber;
 
 const VERSION: u32 = 2;
 
@@ -21,7 +20,7 @@ pub(crate) async fn launch_server() {
         .route("/reset", get(ping))
         .route("/utest", get(device_connection_status))
         .route("/ucheck", get(device_connection_status))
-        .route("/replstart/:deviceid", get(launch_companion_app_on_device))
+        .route("/replstart/{deviceid}", get(launch_companion_app_on_device))
         .layer(
             CorsLayer::new()
                 .allow_origin([
@@ -54,10 +53,10 @@ async fn ping() -> impl IntoResponse {
 }
 
 async fn device_connection_status() -> impl IntoResponse {
-    if let Some(mut device) = get_connected_device() {
-        if let Some(serial) = get_device_serial(&mut device) {
-            return Json(json!({ "status": "OK", "version": VERSION, "device": serial }));
-        }
+    if let Some(mut device) = get_connected_device()
+        && let Some(serial) = get_device_serial(&mut device)
+    {
+        return Json(json!({ "status": "OK", "version": VERSION, "device": serial }));
     }
     Json(json!({ "status": "NO", "version": VERSION }))
 }

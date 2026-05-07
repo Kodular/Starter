@@ -1,4 +1,4 @@
-use crate::adb_commands::{get_connected_device, get_device_info, DeviceInfo};
+use crate::adb_commands::{DeviceInfo, get_connected_device, get_device_info};
 
 mod adb_commands;
 mod server;
