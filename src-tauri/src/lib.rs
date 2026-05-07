@@ -1,4 +1,6 @@
-use crate::adb_commands::{AdbMode, DeviceInfo, get_connected_device, get_device_info, localhost_addr};
+use crate::adb_commands::{
+    AdbMode, DeviceInfo, get_connected_device, get_device_info, localhost_addr,
+};
 use crate::settings::{AppSettings, read_settings, write_settings};
 use adb_client::server::ADBServer;
 use tauri_plugin_dialog::DialogExt;
@@ -39,11 +41,9 @@ fn save_settings(
 #[tauri::command]
 async fn pick_adb_path(app: tauri::AppHandle) -> Option<String> {
     let (tx, rx) = tokio::sync::oneshot::channel();
-    app.dialog()
-        .file()
-        .pick_file(move |path| {
-            let _ = tx.send(path.map(|p| p.to_string()));
-        });
+    app.dialog().file().pick_file(move |path| {
+        let _ = tx.send(path.map(|p| p.to_string()));
+    });
     rx.await.ok().flatten()
 }
 
@@ -58,7 +58,11 @@ fn detect_adb_path(app: tauri::AppHandle) -> Option<String> {
 
     // Search PATH for the adb binary
     let path_var = std::env::var_os("PATH")?;
-    let adb_names: &[&str] = if cfg!(windows) { &["adb.exe", "adb"] } else { &["adb"] };
+    let adb_names: &[&str] = if cfg!(windows) {
+        &["adb.exe", "adb"]
+    } else {
+        &["adb"]
+    };
     for dir in std::env::split_paths(&path_var) {
         for name in adb_names {
             let candidate = dir.join(name);

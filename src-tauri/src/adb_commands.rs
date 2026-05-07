@@ -17,14 +17,7 @@ pub(crate) enum AdbMode {
 }
 
 #[derive(Serialize)]
-pub(crate) enum DeviceTransport {
-    USB,
-    TCP,
-}
-
-#[derive(Serialize)]
 pub(crate) struct DeviceInfo {
-    transport: DeviceTransport,
     serial_no: String,
     model: String,
     android_version: String,
@@ -120,18 +113,12 @@ pub(crate) fn get_device_sdk_version(device: &mut AdbDevice) -> Option<String> {
 }
 
 pub(crate) fn get_device_info(device: &mut AdbDevice) -> Result<DeviceInfo, ()> {
-    let transport = match device {
-        AdbDevice::Usb(_) => DeviceTransport::USB,
-        AdbDevice::Server(_) => DeviceTransport::TCP,
-    };
-
     if let Some(serial_no) = get_device_serial(device)
         && let Some(model) = get_device_model(device)
         && let Some(android_version) = get_device_android_version(device)
         && let Some(sdk_version) = get_device_sdk_version(device)
     {
         return Ok(DeviceInfo {
-            transport,
             serial_no,
             model,
             android_version,

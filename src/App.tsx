@@ -29,7 +29,6 @@ function App() {
             </div>
             {deviceInfo ? (
               <div>
-                <p>Device is connected via {deviceInfo.transport === "USB" ? "USB" : "WiFi"}</p>
                 <DeviceInfo deviceInfo={deviceInfo}/>
               </div>
             ) : (
