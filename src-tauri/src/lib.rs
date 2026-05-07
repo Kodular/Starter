@@ -1,5 +1,6 @@
-use crate::adb_commands::{AdbMode, DeviceInfo, get_connected_device, get_device_info};
+use crate::adb_commands::{AdbMode, DeviceInfo, get_connected_device, get_device_info, localhost_addr};
 use crate::settings::{AppSettings, read_settings, write_settings};
+use adb_client::server::ADBServer;
 use tauri_plugin_dialog::DialogExt;
 
 mod adb_commands;
@@ -12,6 +13,13 @@ fn device_info(app: tauri::AppHandle) -> Result<DeviceInfo, ()> {
     get_connected_device(&settings)
         .and_then(|mut device| get_device_info(&mut device).ok())
         .ok_or(())
+}
+
+#[tauri::command]
+fn adb_status() -> bool {
+    ADBServer::new_from_path(localhost_addr(), None)
+        .version()
+        .is_ok()
 }
 
 #[tauri::command]
@@ -74,6 +82,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             device_info,
+            adb_status,
             get_settings,
             save_settings,
             pick_adb_path,

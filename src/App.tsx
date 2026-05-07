@@ -1,8 +1,9 @@
 import {useState} from "react";
-import {type DeviceInfo, useDeviceInfo, useServerStatus} from "./hooks.ts";
+import {type DeviceInfo, useAdbStatus, useDeviceInfo, useServerStatus} from "./hooks.ts";
 import tauriConfJson from "../src-tauri/tauri.conf.json";
 import {SettingsPanel} from "./SettingsPanel.tsx";
 import {IconButton} from "./components/IconButton.tsx";
+import {StatusBadge} from "./components/StatusBadge.tsx";
 
 function App() {
   const deviceInfo = useDeviceInfo();
@@ -21,7 +22,11 @@ function App() {
       ) : (
         <>
           <main className="flex-1 flex flex-col gap-4 p-4">
-            <LocalServerStatus/>
+            <div className="flex items-center gap-6">
+              <LocalServerStatus/>
+              <div className="w-px h-5 bg-gray-200"/>
+              <AdbServiceStatus/>
+            </div>
             {deviceInfo ? (
               <div>
                 <p>Device is connected via {deviceInfo.transport === "USB" ? "USB" : "WiFi"}</p>
@@ -44,19 +49,15 @@ function App() {
   );
 }
 
+
 function LocalServerStatus() {
   const isServerRunning = useServerStatus();
+  return <StatusBadge label="Starter server" isRunning={isServerRunning}/>
+}
 
-  return (
-    <div className="bg-gray-100 rounded-full px-4 py-2 w-fit flex items-center gap-2">
-      <span className={`size-4 rounded-full ${isServerRunning ? 'bg-green-400' : 'bg-red-500'}`}/>
-      {isServerRunning ? (
-        <p>Local server is running</p>
-      ) : (
-        <p>Local server is not running</p>
-      )}
-    </div>
-  )
+function AdbServiceStatus() {
+  const isAdbRunning = useAdbStatus();
+  return <StatusBadge label="ADB service" isRunning={isAdbRunning}/>
 }
 
 function DeviceInfo({deviceInfo}: { deviceInfo: DeviceInfo }) {

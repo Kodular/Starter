@@ -28,6 +28,17 @@ export type DeviceInfo = {
   sdk_version: string;
 }
 
+export function useAdbStatus() {
+  const {data} = useQuery({
+    queryKey: ["adb-status"],
+    queryFn: () => invoke<boolean>("adb_status"),
+    placeholderData: false,
+    refetchInterval: 3000,
+    retry: false,
+  });
+  return data;
+}
+
 export function useDeviceInfo() {
   const {data, error, status} = useQuery({
     queryKey: ["device-info"],

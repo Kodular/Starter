@@ -52,7 +52,7 @@ impl AdbDevice {
 
 const COMPANION_PKG_NAME: &str = "io.makeroid.companion";
 
-fn localhost_addr() -> SocketAddrV4 {
+pub(crate) fn localhost_addr() -> SocketAddrV4 {
     SocketAddrV4::new(Ipv4Addr::LOCALHOST, 5037)
 }
 
