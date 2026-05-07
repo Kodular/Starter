@@ -1,37 +1,45 @@
+import {useState} from "react";
 import {type DeviceInfo, useDeviceInfo, useServerStatus} from "./hooks.ts";
 import tauriConfJson from "../src-tauri/tauri.conf.json";
+import {SettingsPanel} from "./SettingsPanel.tsx";
 
 function App() {
   const deviceInfo = useDeviceInfo();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <div className="app-shell">
       <header>
-        <img src="/logo-circle-512.png" alt="Kodular Logo" style={{height: 36, width: 36}}/>
-        <h1 style={{color: '#4629a0', margin: 0}}>Kodular Starter {tauriConfJson.version}</h1>
-      </header>
-      <main>
-        <LocalServerStatus/>
-        {
-          deviceInfo ? (
-            <div>
-              <p>Device is connected via {deviceInfo.transport === "USB" ? "USB" : "WiFi"}</p>
-              <DeviceInfo deviceInfo={deviceInfo}/>
-            </div>
-          ) : (
-            <div>
-              <p>Connect your device via USB to see device info</p>
-            </div>
-          )
-        }
-
-      </main>
-      <footer>
-        <p>© Junnovate Limited</p>
+        <img src="/logo-circle-512.png" alt="Kodular Logo" style={{height: 28, width: 28}}/>
+        <span className="app-title">Kodular Starter</span>
         <div style={{flexGrow: 1}}/>
-        <a href="https://docs.kodular.io/guides/live-development/usb/" target="_blank">Guide</a>
-        <a href="https://github.com/Kodular/Starter" target="_blank">Source Code</a>
-      </footer>
+        <button className="settings-btn" onClick={() => setSettingsOpen(o => !o)} aria-label="Settings"
+                data-active={settingsOpen}>⚙</button>
+      </header>
+      {settingsOpen ? (
+        <SettingsPanel onClose={() => setSettingsOpen(false)}/>
+      ) : (
+        <>
+          <main>
+            <LocalServerStatus/>
+            {deviceInfo ? (
+              <div>
+                <p>Device is connected via {deviceInfo.transport === "USB" ? "USB" : "WiFi"}</p>
+                <DeviceInfo deviceInfo={deviceInfo}/>
+              </div>
+            ) : (
+              <p>Connect your device via USB to see device info</p>
+            )}
+          </main>
+          <footer>
+            <p>© Junnovate Limited</p>
+            <div style={{flexGrow: 1}}/>
+            <span className="version-badge">v{tauriConfJson.version}</span>
+            <a href="https://docs.kodular.io/guides/live-development/usb/" target="_blank">Guide</a>
+            <a href="https://github.com/Kodular/Starter" target="_blank">Source Code</a>
+          </footer>
+        </>
+      )}
     </div>
   );
 }
