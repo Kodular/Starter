@@ -14,7 +14,7 @@ function App() {
         <span className="text-sm font-semibold text-primary">Kodular Starter</span>
         <div className="flex-1"/>
         <button
-          className="bg-transparent border-none cursor-pointer text-xl p-1 rounded text-gray-500 hover:bg-primary-light hover:text-primary data-[active=true]:bg-primary-light data-[active=true]:text-primary"
+          className="bg-transparent border-none cursor-pointer text-xl size-8 flex items-center justify-center rounded text-gray-500 hover:bg-primary-light hover:text-primary data-[active=true]:bg-primary-light data-[active=true]:text-primary"
           onClick={() => setSettingsOpen(o => !o)}
           aria-label="Settings"
           data-active={settingsOpen}
