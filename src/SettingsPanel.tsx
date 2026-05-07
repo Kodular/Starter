@@ -6,7 +6,7 @@ type AppSettings = {
   custom_adb_path: string | null;
 }
 
-const inputClass = "font-sans text-sm px-3 py-2 border border-gray-300 rounded outline-none focus:border-primary disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed w-full";
+const inputClass = "font-sans text-sm px-3 py-1.5 border border-gray-300 rounded outline-none focus:border-primary disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed w-full";
 
 export function SettingsPanel({onClose}: { onClose: () => void }) {
   const [mode, setMode] = useState<AppSettings['adb_mode']>('auto');
@@ -70,7 +70,7 @@ export function SettingsPanel({onClose}: { onClose: () => void }) {
               />
               <button
                 type="button"
-                className="font-sans text-sm px-3 py-2 border border-gray-300 rounded bg-white text-gray-600 cursor-pointer whitespace-nowrap hover:enabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+                className="font-sans text-sm px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-600 cursor-pointer whitespace-nowrap hover:enabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
                 onClick={handleBrowse}
                 disabled={mode === 'builtin'}
               >Browse…</button>
@@ -85,11 +85,11 @@ export function SettingsPanel({onClose}: { onClose: () => void }) {
           {saved && <span className="text-xs text-green-600">Saved!</span>}
           <button
             type="submit"
-            className="font-sans text-sm px-4 py-2 bg-primary text-white border-none rounded cursor-pointer hover:bg-primary-dark"
+            className="font-sans text-sm px-4 py-1.5 bg-primary text-white border-none rounded cursor-pointer hover:bg-primary-dark"
           >Save</button>
           <button
             type="button"
-            className="font-sans text-sm px-4 py-2 bg-transparent border border-gray-300 rounded cursor-pointer text-gray-500 ml-auto hover:bg-gray-100"
+            className="font-sans text-sm px-4 py-1.5 bg-transparent border border-gray-300 rounded cursor-pointer text-gray-500 ml-auto hover:bg-gray-100"
             onClick={onClose}
           >Done</button>
         </div>
