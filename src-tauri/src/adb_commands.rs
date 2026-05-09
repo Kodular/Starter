@@ -83,7 +83,7 @@ pub(crate) fn try_system_adb(adb_path: Option<String>) -> Option<AdbDevice> {
     Some(AdbDevice::Server(device))
 }
 
-fn get_connected_device(resolved: &ResolvedAdbMode) -> Option<AdbDevice> {
+pub(crate) fn get_connected_device(resolved: &ResolvedAdbMode) -> Option<AdbDevice> {
     match resolved {
         ResolvedAdbMode::SystemAdb(path) => try_system_adb(path.clone())
             .or_else(|| ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb)),

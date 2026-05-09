@@ -1,26 +1,15 @@
-use crate::adb_commands::{AdbDevice, AdbState, ResolvedAdbMode, get_device_info, try_system_adb};
+use crate::adb_commands::{AdbState, ResolvedAdbMode, get_connected_device, get_device_info};
 use crate::app_state::AppState;
-use adb_client::usb::ADBUSBDevice;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 
 /// Single-pass poll using the pre-resolved ADB mode.
 fn poll_adb_state(resolved: ResolvedAdbMode) -> AdbState {
-    let (available, device_opt) = match resolved {
-        ResolvedAdbMode::SystemAdb(path) => {
-            let maybe = try_system_adb(path);
-            let available = maybe.is_some();
-            let device = maybe.or_else(|| ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb));
-            (available, device)
-        }
-        ResolvedAdbMode::BuiltinUsb => (true, ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb)),
-    };
-    if available {
-        AdbState::Available {
-            device_info: device_opt.and_then(|mut d| get_device_info(&mut d)),
-        }
-    } else {
-        AdbState::Unavailable
+    match get_connected_device(&resolved) {
+        Some(mut device) => AdbState::Available {
+            device_info: get_device_info(&mut device),
+        },
+        None => AdbState::Unavailable,
     }
 }
 
