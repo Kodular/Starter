@@ -1,8 +1,8 @@
-import {Button} from "./components/Button.tsx";
-import {Field} from "./components/Field.tsx";
-import {Input} from "./components/Input.tsx";
-import {Select} from "./components/Select.tsx";
-import {useAppSettings, useCustomAdbPath, useDetectedAdbPath} from "./hooks.ts";
+import {Button} from "#/components/Button.tsx";
+import {Field} from "#/components/Field.tsx";
+import {Input} from "#/components/Input.tsx";
+import {Select} from "#/components/Select.tsx";
+import {useAppSettings, useCustomAdbPath, useDetectedAdbPath} from "#/hooks.ts";
 
 function ValidityBadge({validity}: { validity: string | null }) {
   return (
@@ -22,7 +22,7 @@ function Message({variant, children}: { variant: keyof typeof MESSAGE_VARIANTS; 
   return <span className={`flex items-center gap-1 text-xs ${className}`}><span>{icon}</span> {children}</span>;
 }
 
-export function SettingsPanel({onClose}: { onClose: () => void }) {
+export function SettingsView({onClose}: { onClose: () => void }) {
   const {adbMode, setAdbMode, customAdbPath, setCustomAdbPath, save, saved} = useAppSettings();
   const {customValidity, checking, test, browse, clear, onBlur} = useCustomAdbPath(customAdbPath, setCustomAdbPath);
   const {detectedPath, detectedValidity, refresh} = useDetectedAdbPath();
