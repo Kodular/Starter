@@ -1,4 +1,5 @@
 use tauri::Manager;
+use tauri_plugin_log::log::LevelFilter;
 
 mod adb_commands;
 mod adb_resolver;
@@ -18,7 +19,7 @@ pub fn run() {
         }))
         .plugin(
             tauri_plugin_log::Builder::new()
-                .level(tauri_plugin_log::log::LevelFilter::Info)
+                .level(LevelFilter::Info)
                 .build(),
         )
         .plugin(tauri_plugin_store::Builder::default().build())

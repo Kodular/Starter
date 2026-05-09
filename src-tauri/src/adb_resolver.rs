@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, process::Command};
 
 #[cfg(windows)]
 const ADB_NAMES: &[&str] = &["adb.exe", "adb"];
@@ -59,10 +59,7 @@ pub(crate) fn check_adb_validity(path: &str) -> Option<String> {
     if !Path::new(path).is_file() {
         return None;
     }
-    let output = std::process::Command::new(path)
-        .arg("version")
-        .output()
-        .ok()?;
+    let output = Command::new(path).arg("version").output().ok()?;
     if !output.status.success() {
         return None;
     }

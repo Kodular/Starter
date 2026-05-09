@@ -1,6 +1,7 @@
 use crate::adb_commands::{
     AdbMode, DeviceInfo, get_connected_device, get_device_info, localhost_addr,
 };
+use crate::adb_resolver;
 use crate::settings::{AppSettings, read_settings, write_settings};
 use adb_client::server::ADBServer;
 use tauri_plugin_dialog::DialogExt;
@@ -51,11 +52,11 @@ pub(crate) async fn pick_adb_path(app: tauri::AppHandle) -> Option<String> {
 
 #[tauri::command]
 pub(crate) fn check_adb_validity(path: String) -> Option<String> {
-    crate::adb_resolver::check_adb_validity(&path)
+    adb_resolver::check_adb_validity(&path)
 }
 
 #[tauri::command]
 pub(crate) fn detect_adb_path(app: tauri::AppHandle) -> Option<String> {
     let settings = read_settings(&app);
-    crate::adb_resolver::detect_adb_path(settings.custom_adb_path.as_deref())
+    adb_resolver::detect_adb_path(settings.custom_adb_path.as_deref())
 }
