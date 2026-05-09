@@ -47,11 +47,11 @@ cargo test -p kodular-starter -- --nocapture
 
 ### Backend (`src-tauri/src/`)
 
-- **`lib.rs`** — Tauri command handlers exposed to the frontend. Spawns the axum server on startup. Registers `tauri-plugin-single-instance` (refocuses the existing window on duplicate launch). Commands: `device_info`, `adb_status`, `get_settings`, `save_settings`, `pick_adb_path`, `detect_adb_path`, `check_adb_validity`.
+- **`lib.rs`** — Tauri command handlers exposed to the frontend. Spawns the axum server on startup. Registers `tauri-plugin-single-instance` (refocuses the existing window on duplicate launch). Commands: `device_info`, `adb_status`, `get_settings`, `save_settings`, `pick_adb_path`, `detect_adb_path`, `test_adb_path`.
 - **`adb_commands.rs`** — ADB logic. Supports two modes via `AdbMode` enum:
   - `Auto`: tries system ADB first (via `ADBServer`), falls back to built-in USB (`ADBUSBDevice`)
   - `Builtin`: only uses `ADBUSBDevice` (no system adb required)
-- **`adb_resolver.rs`** — ADB binary resolution. `resolve_external_adb_path` walks custom path → `$ANDROID_HOME/platform-tools` → `$ANDROID_SDK_ROOT/platform-tools`, returning `None` to fall back to `$PATH`. `detect_adb_path_impl` extends this with a full `$PATH` search for UI display. `check_adb_validity_impl` tests a binary by running `adb version`.
+- **`adb_resolver.rs`** — ADB binary resolution. `resolve_external_adb_path` walks custom path → `$ANDROID_HOME/platform-tools` → `$ANDROID_SDK_ROOT/platform-tools`, returning `None` to fall back to `$PATH`. `detect_adb_path` extends this with a full `$PATH` search for UI display. `test_adb_path` tests a binary by running `adb version`.
 - **`server.rs`** — Axum HTTP server on `0.0.0.0:8004`. Key endpoints:
   - `/ping`, `/reset` — liveness check
   - `/utest`, `/ucheck` — device connection status (returns serial number)

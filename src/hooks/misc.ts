@@ -13,7 +13,7 @@ export function useCustomAdbPath(customAdbPath: string, setCustomAdbPath: (path:
     if (!path) { setCustomValidity(undefined); return; }
     setChecking(true);
     setCustomValidity(undefined);
-    const version = await invoke<string | null>('check_adb_validity', {path});
+    const version = await invoke<string | null>('test_adb_path', {path});
     setCustomValidity(version);
     setChecking(false);
   }
@@ -57,7 +57,7 @@ export function useDetectedAdbPath() {
   async function testDetected() {
     if (!detectedPath) return;
     setCheckingDetected(true);
-    const version = await invoke<string | null>('check_adb_validity', {path: detectedPath});
+    const version = await invoke<string | null>('test_adb_path', {path: detectedPath});
     setDetectedValidity(version);
     setCheckingDetected(false);
   }

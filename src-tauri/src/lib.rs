@@ -74,7 +74,7 @@ pub fn run() {
             tauri_commands::adb_state,
             tauri_commands::local_server_status,
             tauri_commands::detect_adb_path,
-            tauri_commands::check_adb_validity,
+            tauri_commands::test_adb_path,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

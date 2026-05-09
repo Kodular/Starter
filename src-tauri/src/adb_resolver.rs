@@ -71,7 +71,7 @@ pub(crate) fn resolve_adb_mode(settings: &AppSettings) -> ResolvedAdbMode {
 ///
 /// Note: intentionally uses `Command` rather than `adb_client` — `adb_client` queries whatever
 /// daemon is already running over TCP, not the binary at `path`, so it can't validate a specific binary.
-pub(crate) fn check_adb_validity(path: &str) -> Option<String> {
+pub(crate) fn test_adb_path(path: &str) -> Option<String> {
     if !Path::new(path).is_file() {
         return None;
     }

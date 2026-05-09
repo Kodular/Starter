@@ -21,6 +21,6 @@ pub(crate) fn detect_adb_path(app: AppHandle) -> Option<String> {
 }
 
 #[tauri::command]
-pub(crate) fn check_adb_validity(path: String) -> Option<String> {
-    adb_resolver::check_adb_validity(&path)
+pub(crate) fn test_adb_path(path: String) -> Option<String> {
+    adb_resolver::test_adb_path(&path)
 }
