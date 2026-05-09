@@ -55,16 +55,14 @@ impl AdbDevice {
     }
 }
 
-pub(crate) fn localhost_addr() -> SocketAddrV4 {
-    SocketAddrV4::new(Ipv4Addr::LOCALHOST, 5037)
-}
+pub(crate) const ADB_SERVER_ADDR: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 5037);
 
 fn try_system_adb(adb_path: Option<String>) -> Option<AdbDevice> {
-    let mut server = ADBServer::new_from_path(localhost_addr(), adb_path);
+    let mut server = ADBServer::new_from_path(ADB_SERVER_ADDR, adb_path);
     if server.version().is_err() {
         return None;
     }
-    let device = ADBServerDevice::autodetect(Some(localhost_addr()));
+    let device = ADBServerDevice::autodetect(Some(ADB_SERVER_ADDR));
     Some(AdbDevice::Server(device))
 }
 
@@ -101,10 +99,15 @@ fn parse_companion_status(lines: &mut std::str::Lines<'_>) -> CompanionStatus {
         .find(|l| l.contains("versionCode="))
         .and_then(|l| l.trim().split_once('='))
         .and_then(|(_, v)| v.split_whitespace().next().map(str::to_string));
-    log::info!("parse_companion_status: version_name={version_name:?} version_code={version_code:?}");
+    log::info!(
+        "parse_companion_status: version_name={version_name:?} version_code={version_code:?}"
+    );
     match (version_name, version_code) {
         (Some(version_name), Some(version_code)) if !version_name.is_empty() => {
-            CompanionStatus::Installed { version_name, version_code }
+            CompanionStatus::Installed {
+                version_name,
+                version_code,
+            }
         }
         _ => {
             log::info!("parse_companion_status: companion app not found or version fields missing");

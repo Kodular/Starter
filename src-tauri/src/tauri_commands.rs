@@ -1,5 +1,5 @@
 use crate::adb_commands::{
-    AdbMode, DeviceInfo, get_connected_device, get_device_info, localhost_addr,
+    ADB_SERVER_ADDR, AdbMode, DeviceInfo, get_connected_device, get_device_info,
 };
 use crate::adb_resolver;
 use crate::settings::{AppSettings, read_settings, write_settings};
@@ -16,7 +16,7 @@ pub(crate) fn device_info(app: tauri::AppHandle) -> Result<DeviceInfo, String> {
 
 #[tauri::command]
 pub(crate) fn adb_status() -> bool {
-    ADBServer::new_from_path(localhost_addr(), None)
+    ADBServer::new_from_path(ADB_SERVER_ADDR, None)
         .version()
         .is_ok()
 }

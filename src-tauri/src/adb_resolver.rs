@@ -55,6 +55,9 @@ pub(crate) fn detect_adb_path(custom: Option<&str>) -> Option<String> {
 
 /// Tests an ADB binary at `path` by running `adb version`.
 /// Returns the first line of output on success, `None` on any failure.
+///
+/// Note: intentionally uses `Command` rather than `adb_client` — `adb_client` queries whatever
+/// daemon is already running over TCP, not the binary at `path`, so it can't validate a specific binary.
 pub(crate) fn check_adb_validity(path: &str) -> Option<String> {
     if !Path::new(path).is_file() {
         return None;

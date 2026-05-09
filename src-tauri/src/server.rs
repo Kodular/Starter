@@ -5,11 +5,14 @@ use axum::extract::Request;
 use axum::http::header::{CONTENT_TYPE, ORIGIN};
 use axum::http::{HeaderValue, Method};
 use axum::{Router, ServiceExt, routing::get};
+use std::net::{Ipv4Addr, SocketAddrV4};
 use tauri::AppHandle;
 use tokio::net::TcpListener;
 use tower::Layer;
 use tower_http::cors::CorsLayer;
 use tower_http::normalize_path::NormalizePathLayer;
+
+const SERVER_ADDR: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 8004);
 
 pub(crate) async fn launch_server(app: AppHandle) {
     let router = Router::new()
@@ -38,10 +41,10 @@ pub(crate) async fn launch_server(app: AppHandle) {
 
     let app = NormalizePathLayer::trim_trailing_slash().layer(router);
 
-    let listener = match TcpListener::bind("127.0.0.1:8004").await {
+    let listener = match TcpListener::bind(SERVER_ADDR).await {
         Ok(l) => l,
         Err(e) => {
-            log::error!("Failed to bind HTTP server on port 8004: {e}");
+            log::error!("Failed to bind HTTP server on {SERVER_ADDR}: {e}");
             return;
         }
     };
