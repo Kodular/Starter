@@ -18,10 +18,12 @@ mod settings;
 mod tauri_commands;
 
 fn on_exit(app: &AppHandle) {
+    log::info!("Exiting Starter...");
     let settings = settings::read_settings(app);
     if settings.kill_adb_on_exit
         && let AdbMode::Auto = settings.adb_mode
     {
+        log::info!("Killing ADB server...");
         let path = adb_resolver::detect_adb_path(settings.custom_adb_path.as_deref());
         adb_commands::kill_adb_server(path);
     }
@@ -29,8 +31,10 @@ fn on_exit(app: &AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    println!("Starting Starter...");
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            log::info!("Another instance of Starter attempted to start. Focusing main window.");
             let _ = app
                 .get_webview_window("main")
                 .expect("no main window")
@@ -45,12 +49,15 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            log::info!("Setting up application state...");
             app.store("settings.json").map_err(|e| e.to_string())?;
             app.manage(Mutex::new(app_state::AppStateInner {
                 adb_state: AdbState::Initialising,
                 local_server_status: LocalServerStatus::Starting,
             }));
+            log::info!("Launching local server...");
             tauri::async_runtime::spawn(server::launch_server(app.handle().clone()));
+            log::info!("Starting ADB monitor...");
             tauri::async_runtime::spawn(adb_monitor::run(app.handle().clone()));
             Ok(())
         })

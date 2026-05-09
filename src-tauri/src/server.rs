@@ -6,7 +6,9 @@ use axum::extract::Request;
 use axum::http::header::{CONTENT_TYPE, ORIGIN};
 use axum::http::{HeaderValue, Method};
 use axum::{Router, ServiceExt, routing::get};
+use std::io::ErrorKind;
 use std::net::{Ipv4Addr, SocketAddrV4};
+use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::net::TcpListener;
 use tower::Layer;
@@ -14,7 +16,7 @@ use tower_http::cors::CorsLayer;
 use tower_http::normalize_path::NormalizePathLayer;
 
 const SERVER_ADDR: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 8004);
-const BIND_RETRIES: u32 = 5;
+const BIND_RETRIES: u8 = 5;
 
 fn set_server_status(app: &AppHandle, status: LocalServerStatus) {
     app.state::<AppState>().lock().unwrap().local_server_status = status.clone();
@@ -23,16 +25,17 @@ fn set_server_status(app: &AppHandle, status: LocalServerStatus) {
 
 pub(crate) async fn launch_server(app: AppHandle) {
     let listener = {
-        let mut attempts = 0u32;
+        let mut attempts = 0u8;
         loop {
             match TcpListener::bind(SERVER_ADDR).await {
                 Ok(l) => break l,
-                Err(e) if e.kind() == std::io::ErrorKind::AddrInUse && attempts < BIND_RETRIES => {
+                Err(e) if e.kind() == ErrorKind::AddrInUse && attempts < BIND_RETRIES => {
                     attempts += 1;
                     log::warn!(
-                        "Port {SERVER_ADDR} already in use, retry {attempts}/{BIND_RETRIES}..."
+                        "Port {} already in use, retry {attempts}/{BIND_RETRIES}...",
+                        SERVER_ADDR.port()
                     );
-                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                    tokio::time::sleep(Duration::from_secs(1)).await;
                 }
                 Err(e) => {
                     log::error!("Failed to bind HTTP server on {SERVER_ADDR}: {e}");
