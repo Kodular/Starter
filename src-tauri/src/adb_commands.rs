@@ -26,6 +26,16 @@ pub(crate) enum AdbMode {
     Builtin,
 }
 
+/// The resolved ADB method after applying settings and path detection.
+/// Computed once on startup and on settings change — not per-poll.
+#[derive(Debug, Clone)]
+pub(crate) enum ResolvedAdbMode {
+    /// Use system ADB daemon. `None` means fall back to $PATH.
+    SystemAdb(Option<String>),
+    /// Use built-in USB transport only (no system adb required).
+    BuiltinUsb,
+}
+
 #[derive(Serialize, Clone, PartialEq)]
 #[serde(tag = "status")]
 pub(crate) enum CompanionStatus {

@@ -4,8 +4,8 @@ use tauri_plugin_log::log::LevelFilter;
 use tauri_plugin_store::StoreExt;
 
 use crate::{
-    adb_commands::{AdbMode, AdbState},
-    app_state::LocalServerStatus,
+    adb_commands::{AdbState, ResolvedAdbMode},
+    app_state::{AppState, LocalServerStatus},
 };
 
 mod adb_commands;
@@ -20,12 +20,17 @@ mod tauri_commands;
 fn on_exit(app: &AppHandle) {
     log::info!("Exiting Starter...");
     let settings = settings::read_settings(app);
-    if settings.kill_adb_on_exit
-        && let AdbMode::Auto = settings.adb_mode
-    {
-        log::info!("Killing ADB server...");
-        let path = adb_resolver::detect_adb_path(settings.custom_adb_path.as_deref());
-        adb_commands::kill_adb_server(path);
+    if settings.kill_adb_on_exit {
+        let resolved = app
+            .state::<AppState>()
+            .lock()
+            .unwrap()
+            .resolved_adb_mode
+            .clone();
+        if let ResolvedAdbMode::SystemAdb(path) = resolved {
+            log::info!("Killing ADB server...");
+            adb_commands::kill_adb_server(path);
+        }
     }
 }
 
@@ -51,9 +56,13 @@ pub fn run() {
         .setup(|app| {
             log::info!("Setting up application state...");
             app.store("settings.json").map_err(|e| e.to_string())?;
+            let initial_settings = settings::read_settings(app.handle());
+            let resolved_adb_mode = adb_resolver::resolve_adb_mode(&initial_settings);
+            log::info!("Resolved ADB mode: {:?}", resolved_adb_mode);
             app.manage(Mutex::new(app_state::AppStateInner {
                 adb_state: AdbState::Initialising,
                 local_server_status: LocalServerStatus::Starting,
+                resolved_adb_mode,
             }));
             log::info!("Launching local server...");
             tauri::async_runtime::spawn(server::launch_server(app.handle().clone()));

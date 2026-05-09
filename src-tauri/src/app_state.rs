@@ -1,4 +1,4 @@
-use crate::adb_commands::AdbState;
+use crate::adb_commands::{AdbState, ResolvedAdbMode};
 use serde::Serialize;
 use std::sync::Mutex;
 
@@ -14,6 +14,8 @@ pub enum LocalServerStatus {
 pub struct AppStateInner {
     pub adb_state: AdbState,
     pub local_server_status: LocalServerStatus,
+    #[serde(skip)]
+    pub resolved_adb_mode: ResolvedAdbMode,
 }
 
 pub type AppState = Mutex<AppStateInner>;

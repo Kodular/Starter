@@ -1,3 +1,5 @@
+use crate::adb_commands::{AdbMode, ResolvedAdbMode};
+use crate::settings::AppSettings;
 use std::{path::Path, process::Command};
 
 #[cfg(windows)]
@@ -51,6 +53,17 @@ pub(crate) fn detect_adb_path(custom: Option<&str>) -> Option<String> {
     }
 
     None
+}
+
+/// Resolves the effective ADB mode from settings, performing path detection once.
+/// Call this on startup and whenever settings change.
+pub(crate) fn resolve_adb_mode(settings: &AppSettings) -> ResolvedAdbMode {
+    match settings.adb_mode {
+        AdbMode::Auto => {
+            ResolvedAdbMode::SystemAdb(detect_adb_path(settings.custom_adb_path.as_deref()))
+        }
+        AdbMode::Builtin => ResolvedAdbMode::BuiltinUsb,
+    }
 }
 
 /// Tests an ADB binary at `path` by running `adb version`.
