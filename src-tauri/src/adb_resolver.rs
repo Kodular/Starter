@@ -44,7 +44,7 @@ pub(crate) fn detect_adb_path_impl(custom: Option<&str>) -> Option<String> {
     for dir in std::env::split_paths(&path_var) {
         for name in adb_names() {
             let candidate = dir.join(name);
-            if candidate.exists() {
+            if candidate.is_file() {
                 return Some(candidate.to_string_lossy().into_owned());
             }
         }
