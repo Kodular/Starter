@@ -14,7 +14,7 @@ use tower_http::normalize_path::NormalizePathLayer;
 const VERSION: u32 = 2;
 
 pub(crate) async fn launch_server(app: AppHandle) {
-    tracing_subscriber::fmt::init();
+    let _ = tracing_subscriber::fmt::try_init();
 
     let router = Router::new()
         .route("/", get(index))
