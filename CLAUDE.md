@@ -30,7 +30,7 @@ bun run typecheck
 
 **Run Rust tests (requires a USB-connected Android device):**
 ```
-cargo test -p starter -- --nocapture
+cargo test -p kodular-starter -- --nocapture
 ```
 
 ## Architecture

@@ -46,4 +46,4 @@ jobs:
         run: bun run build && cargo build --manifest-path src-tauri/Cargo.toml
 
       - name: Test
-        run: cargo test --manifest-path src-tauri/Cargo.toml -p starter
+        run: cargo test --manifest-path src-tauri/Cargo.toml -p kodular-starter
