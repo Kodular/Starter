@@ -15,7 +15,9 @@ function App() {
         <img src="/logo-circle-512.png" alt="Kodular Logo" className="h-7 w-7"/>
         <span className="text-sm font-semibold text-primary">Kodular Starter</span>
         <div className="flex-1"/>
-        <IconButton onClick={() => setSettingsOpen(o => !o)} aria-label="Settings" active={settingsOpen}>⚙</IconButton>
+        <IconButton onClick={() => setSettingsOpen(o => !o)} aria-label="Settings" active={settingsOpen}>
+          <span className="w-5 h-5 bg-gray-600 mask-[url('/icons/md-settings.svg')] mask-contain mask-no-repeat mask-center"/>
+        </IconButton>
       </header>
       {settingsOpen ? (
         <SettingsPanel onClose={() => setSettingsOpen(false)}/>
