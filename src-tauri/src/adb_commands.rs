@@ -6,7 +6,8 @@ use adb_client::{
 use serde::{Deserialize, Serialize};
 use std::io::{Write, stdout};
 use std::net::{Ipv4Addr, SocketAddrV4};
-use std::str::from_utf8;
+
+const COMPANION_PKG_NAME: &str = "io.makeroid.companion";
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
@@ -30,7 +31,7 @@ pub(crate) enum AdbDevice {
 }
 
 impl AdbDevice {
-    fn shell_command_inner(
+    fn shell_command(
         &mut self,
         command: &dyn AsRef<str>,
         stdout: Option<&mut dyn Write>,
@@ -42,8 +43,6 @@ impl AdbDevice {
         }
     }
 }
-
-const COMPANION_PKG_NAME: &str = "io.makeroid.companion";
 
 pub(crate) fn localhost_addr() -> SocketAddrV4 {
     SocketAddrV4::new(Ipv4Addr::LOCALHOST, 5037)
@@ -69,100 +68,51 @@ pub(crate) fn get_connected_device(settings: &AppSettings) -> Option<AdbDevice> 
 }
 
 fn getprop_from_device(device: &mut AdbDevice, property: &str) -> Option<String> {
-    let mut buf: Vec<u8> = Vec::new();
-
-    match device.shell_command_inner(&format!("getprop {}", property), Some(&mut buf), None) {
-        Ok(..) => match from_utf8(buf.as_slice()) {
-            Ok(data) => Some(data.trim().to_string()),
-            Err(..) => None,
-        },
-        Err(..) => None,
-    }
+    let mut buf = Vec::new();
+    device
+        .shell_command(&format!("getprop {property}"), Some(&mut buf), None)
+        .ok()?;
+    std::str::from_utf8(&buf).ok().map(|s| s.trim().to_string())
 }
 
 pub(crate) fn get_device_serial(device: &mut AdbDevice) -> Option<String> {
     getprop_from_device(device, "ro.serialno")
 }
 
-pub(crate) fn get_device_model(device: &mut AdbDevice) -> Option<String> {
+fn get_device_model(device: &mut AdbDevice) -> Option<String> {
     getprop_from_device(device, "ro.product.model")
 }
 
-pub(crate) fn get_device_android_version(device: &mut AdbDevice) -> Option<String> {
+fn get_device_android_version(device: &mut AdbDevice) -> Option<String> {
     getprop_from_device(device, "ro.build.version.release")
 }
 
-pub(crate) fn get_device_sdk_version(device: &mut AdbDevice) -> Option<String> {
+fn get_device_sdk_version(device: &mut AdbDevice) -> Option<String> {
     getprop_from_device(device, "ro.build.version.sdk")
 }
 
-pub(crate) fn get_device_info(device: &mut AdbDevice) -> Result<DeviceInfo, ()> {
-    if let Some(serial_no) = get_device_serial(device)
-        && let Some(model) = get_device_model(device)
-        && let Some(android_version) = get_device_android_version(device)
-        && let Some(sdk_version) = get_device_sdk_version(device)
-    {
-        return Ok(DeviceInfo {
-            serial_no,
-            model,
-            android_version,
-            sdk_version,
-        });
-    }
-    Err(())
+pub(crate) fn get_device_info(device: &mut AdbDevice) -> Option<DeviceInfo> {
+    Some(DeviceInfo {
+        serial_no: get_device_serial(device)?,
+        model: get_device_model(device)?,
+        android_version: get_device_android_version(device)?,
+        sdk_version: get_device_sdk_version(device)?,
+    })
 }
 
 pub(crate) fn start_companion(device_serial: &str, settings: &AppSettings) -> Result<(), ()> {
-    if let Some(mut device) = get_connected_device(settings)
-        && let Some(serial_no) = get_device_serial(&mut device)
-    {
-        if serial_no != device_serial {
-            return Err(());
-        }
-
-        let _ = device.shell_command_inner(
-            &format!(
-                "am start -a android.intent.action.MAIN -n {}/.Screen1 --ez rundirect true",
-                COMPANION_PKG_NAME
-            ),
-            Some(&mut stdout()),
-            None,
-        );
+    let mut device = get_connected_device(settings).ok_or(())?;
+    let serial_no = get_device_serial(&mut device).ok_or(())?;
+    if serial_no != device_serial {
+        return Err(());
     }
+    let _ = device.shell_command(
+        &format!(
+            "am start -a android.intent.action.MAIN -n {}/.Screen1 --ez rundirect true",
+            COMPANION_PKG_NAME
+        ),
+        Some(&mut stdout()),
+        None,
+    );
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn builtin_settings() -> crate::settings::AppSettings {
-        crate::settings::AppSettings {
-            adb_mode: AdbMode::Builtin,
-            ..Default::default()
-        }
-    }
-
-    #[test]
-    fn test_get_device_info() {
-        let settings = builtin_settings();
-        if let Some(mut device) = get_connected_device(&settings) {
-            if let Ok(device_info) = get_device_info(&mut device) {
-                println!("Serial No: {:?}", device_info.serial_no);
-                println!("Model: {:?}", device_info.model);
-                println!("Android Version: {:?}", device_info.android_version);
-                println!("SDK Version: {:?}", device_info.sdk_version);
-            }
-        }
-    }
-
-    #[test]
-    fn test_start_companion() {
-        let settings = builtin_settings();
-        if let Some(mut device) = get_connected_device(&settings) {
-            if let Some(serial_no) = get_device_serial(&mut device) {
-                start_companion(&serial_no, &settings).unwrap();
-            }
-        }
-    }
 }

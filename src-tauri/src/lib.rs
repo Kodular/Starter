@@ -12,11 +12,11 @@ mod server;
 mod settings;
 
 #[tauri::command]
-fn device_info(app: tauri::AppHandle) -> Result<DeviceInfo, ()> {
+fn device_info(app: tauri::AppHandle) -> Result<DeviceInfo, String> {
     let settings = read_settings(&app);
     get_connected_device(&settings)
-        .and_then(|mut device| get_device_info(&mut device).ok())
-        .ok_or(())
+        .and_then(|mut device| get_device_info(&mut device))
+        .ok_or_else(|| "no device connected".to_string())
 }
 
 #[tauri::command]
@@ -37,7 +37,13 @@ fn save_settings(
     adb_mode: AdbMode,
     custom_adb_path: Option<String>,
 ) -> Result<(), String> {
-    write_settings(&app, adb_mode, custom_adb_path)
+    write_settings(
+        &app,
+        AppSettings {
+            adb_mode,
+            custom_adb_path,
+        },
+    )
 }
 
 #[tauri::command]
@@ -51,17 +57,13 @@ async fn pick_adb_path(app: tauri::AppHandle) -> Option<String> {
 
 #[tauri::command]
 fn check_adb_validity(path: String) -> Option<String> {
-    adb_resolver::check_adb_validity_impl(&path)
+    adb_resolver::check_adb_validity(&path)
 }
 
 #[tauri::command]
 fn detect_adb_path(app: tauri::AppHandle) -> Option<String> {
     let settings = read_settings(&app);
-    let custom = settings
-        .custom_adb_path
-        .as_deref()
-        .filter(|s| !s.is_empty());
-    adb_resolver::detect_adb_path_impl(custom)
+    adb_resolver::detect_adb_path(settings.custom_adb_path.as_deref())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

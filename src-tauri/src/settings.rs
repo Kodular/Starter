@@ -12,29 +12,29 @@ pub(crate) struct AppSettings {
 }
 
 pub(crate) fn read_settings(app: &AppHandle) -> AppSettings {
-    let Ok(store) = app.store(STORE_NAME) else {
-        return AppSettings::default();
-    };
-    let value = serde_json::json!({
-        "adb_mode": store.get("adb_mode"),
-        "custom_adb_path": store.get("custom_adb_path"),
-    });
-    serde_json::from_value(value).unwrap_or_default()
+    app.store(STORE_NAME)
+        .ok()
+        .map(|store| AppSettings {
+            adb_mode: store
+                .get("adb_mode")
+                .and_then(|v| serde_json::from_value(v).ok())
+                .unwrap_or_default(),
+            custom_adb_path: store
+                .get("custom_adb_path")
+                .and_then(|v| serde_json::from_value(v).ok()),
+        })
+        .unwrap_or_default()
 }
 
-pub(crate) fn write_settings(
-    app: &AppHandle,
-    adb_mode: AdbMode,
-    custom_adb_path: Option<String>,
-) -> Result<(), String> {
+pub(crate) fn write_settings(app: &AppHandle, settings: AppSettings) -> Result<(), String> {
     let store = app.store(STORE_NAME).map_err(|e| e.to_string())?;
     store.set(
         "adb_mode",
-        serde_json::to_value(&adb_mode).map_err(|e| e.to_string())?,
+        serde_json::to_value(&settings.adb_mode).map_err(|e| e.to_string())?,
     );
     store.set(
         "custom_adb_path",
-        serde_json::to_value(&custom_adb_path).map_err(|e| e.to_string())?,
+        serde_json::to_value(&settings.custom_adb_path).map_err(|e| e.to_string())?,
     );
     store.save().map_err(|e| e.to_string())
 }

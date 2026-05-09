@@ -14,8 +14,6 @@ use tower_http::normalize_path::NormalizePathLayer;
 const VERSION: u32 = 2;
 
 pub(crate) async fn launch_server(app: AppHandle) {
-    let _ = tracing_subscriber::fmt::try_init();
-
     let router = Router::new()
         .route("/", get(index))
         .route("/ping", get(ping))
@@ -42,14 +40,20 @@ pub(crate) async fn launch_server(app: AppHandle) {
 
     let app = NormalizePathLayer::trim_trailing_slash().layer(router);
 
-    let listener = TcpListener::bind("127.0.0.1:8004").await.unwrap();
-    axum::serve(listener, ServiceExt::<Request>::into_make_service(app))
-        .await
-        .unwrap();
+    let listener = match TcpListener::bind("127.0.0.1:8004").await {
+        Ok(l) => l,
+        Err(e) => {
+            log::error!("Failed to bind HTTP server on port 8004: {e}");
+            return;
+        }
+    };
+    if let Err(e) = axum::serve(listener, ServiceExt::<Request>::into_make_service(app)).await {
+        log::error!("HTTP server error: {e}");
+    }
 }
 
 async fn index() -> impl IntoResponse {
-    "Hello World from Kodular Starter!".into_response()
+    "Hello World from Kodular Starter!"
 }
 
 async fn ping() -> impl IntoResponse {

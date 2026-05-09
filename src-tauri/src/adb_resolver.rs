@@ -1,12 +1,9 @@
 use std::path::Path;
 
-fn adb_names() -> &'static [&'static str] {
-    if cfg!(windows) {
-        &["adb.exe", "adb"]
-    } else {
-        &["adb"]
-    }
-}
+#[cfg(windows)]
+const ADB_NAMES: &[&str] = &["adb.exe", "adb"];
+#[cfg(not(windows))]
+const ADB_NAMES: &[&str] = &["adb"];
 
 /// Resolves an external ADB binary path using the priority chain:
 /// custom path → $ANDROID_HOME/platform-tools → $ANDROID_SDK_ROOT/platform-tools
@@ -22,7 +19,7 @@ pub(crate) fn resolve_external_adb_path(custom: Option<&str>) -> Option<String> 
 
     for var in &["ANDROID_HOME", "ANDROID_SDK_ROOT"] {
         if let Ok(sdk) = std::env::var(var) {
-            for name in adb_names() {
+            for name in ADB_NAMES {
                 let candidate = Path::new(&sdk).join("platform-tools").join(name);
                 if candidate.is_file() {
                     return Some(candidate.to_string_lossy().into_owned());
@@ -35,14 +32,17 @@ pub(crate) fn resolve_external_adb_path(custom: Option<&str>) -> Option<String> 
 }
 
 /// Full detection chain including explicit $PATH search, for UI display.
-pub(crate) fn detect_adb_path_impl(custom: Option<&str>) -> Option<String> {
+/// Treats empty string as absent (same as None).
+pub(crate) fn detect_adb_path(custom: Option<&str>) -> Option<String> {
+    let custom = custom.filter(|s| !s.is_empty());
+
     if let Some(path) = resolve_external_adb_path(custom) {
         return Some(path);
     }
 
     let path_var = std::env::var_os("PATH")?;
     for dir in std::env::split_paths(&path_var) {
-        for name in adb_names() {
+        for name in ADB_NAMES {
             let candidate = dir.join(name);
             if candidate.is_file() {
                 return Some(candidate.to_string_lossy().into_owned());
@@ -55,7 +55,7 @@ pub(crate) fn detect_adb_path_impl(custom: Option<&str>) -> Option<String> {
 
 /// Tests an ADB binary at `path` by running `adb version`.
 /// Returns the first line of output on success, `None` on any failure.
-pub(crate) fn check_adb_validity_impl(path: &str) -> Option<String> {
+pub(crate) fn check_adb_validity(path: &str) -> Option<String> {
     if !Path::new(path).is_file() {
         return None;
     }
