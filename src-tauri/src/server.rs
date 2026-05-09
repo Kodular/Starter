@@ -42,7 +42,7 @@ pub(crate) async fn launch_server(app: AppHandle) {
 
     let app = NormalizePathLayer::trim_trailing_slash().layer(router);
 
-    let listener = TcpListener::bind("0.0.0.0:8004").await.unwrap();
+    let listener = TcpListener::bind("127.0.0.1:8004").await.unwrap();
     axum::serve(listener, ServiceExt::<Request>::into_make_service(app))
         .await
         .unwrap();
