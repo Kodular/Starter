@@ -158,9 +158,25 @@ pub(crate) fn kill_adb_server(adb_path: Option<String>) {
 
 pub(crate) fn start_companion(resolved: &ResolvedAdbMode) -> Result<(), ()> {
     let mut device = get_connected_device(resolved).ok_or(())?;
+
+    // adb_client does not support port forwarding for USB devices yet
+    // (see https://github.com/cocool97/adb_client/issues/63).
+    // For BuiltinUsb mode we skip the forward entirely — the companion app
+    // will launch but its tcp:8001 socket back to the IDE will not work.
+    match &mut device {
+        AdbDevice::Server(dev) => {
+            let _ = dev.forward("tcp:8001".to_string(), "tcp:8001".to_string());
+        }
+        AdbDevice::Usb(_) => {
+            log::warn!(
+                "tcp:8001 port forward skipped in BuiltinUsb mode — adb_client lacks USB forward support"
+            );
+        }
+    }
+
     let _ = device.shell_command(
         &format!(
-            "am start -a android.intent.action.MAIN -n {}/.Screen1 --ez rundirect true",
+            "am start -a android.intent.action.VIEW -n {}/.Screen1 --ez rundirect true",
             COMPANION_PKG_NAME
         ),
         Some(&mut stdout()),
