@@ -6,7 +6,6 @@ import {IconButton} from "./components/IconButton.tsx";
 import {StatusBadge} from "./components/StatusBadge.tsx";
 
 function App() {
-  const deviceInfo = useDeviceInfo();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
@@ -29,13 +28,7 @@ function App() {
               <div className="w-px h-5 bg-gray-200"/>
               <AdbServiceStatus/>
             </div>
-            {deviceInfo ? (
-              <div>
-                <DeviceInfo deviceInfo={deviceInfo}/>
-              </div>
-            ) : (
-              <p>Connect your device via USB to see device info</p>
-            )}
+            <DeviceInfo/>
           </main>
           <footer className="flex items-center gap-2 px-4 py-2 border-t border-gray-200">
             <span className="text-xs font-semibold text-gray-600">v{tauriConfJson.version}</span>
@@ -49,7 +42,6 @@ function App() {
     </div>
   );
 }
-
 
 function LocalServerStatus() {
   const isServerRunning = useServerStatus();
@@ -68,7 +60,11 @@ function CompanionStatusDisplay({status}: { status: CompanionStatus }) {
   return <p>Companion App: <span className="text-red-500">Not installed</span></p>;
 }
 
-function DeviceInfo({deviceInfo}: { deviceInfo: DeviceInfo }) {
+function DeviceInfo() {
+  const deviceInfo = useDeviceInfo();
+  if (!deviceInfo) {
+    return <p>Connect your device via USB to see device info</p>;
+  }
   return (
     <div className="border border-gray-200 rounded-2xl w-fit">
       <h4 className="border-b border-gray-200 px-4 py-2">Device Info</h4>
