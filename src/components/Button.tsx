@@ -12,6 +12,6 @@ const variants = {
   outlined: "border border-gray-200 bg-transparent text-gray-500 hover:bg-gray-100",
 } as const;
 
-export function Button({variant = 'primary', className, ...props}: ButtonProps) {
-  return <button className={cn(base, variants[variant], className)} {...props}/>;
+export function Button({variant = 'primary', type = 'button', className, ...props}: ButtonProps) {
+  return <button type={type} className={cn(base, variants[variant], className)} {...props}/>;
 }

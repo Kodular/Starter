@@ -4,7 +4,6 @@ use crate::adb_commands::{
 use crate::adb_resolver;
 use crate::settings::{AppSettings, read_settings, write_settings};
 use adb_client::server::ADBServer;
-use tauri_plugin_dialog::DialogExt;
 
 #[tauri::command]
 pub(crate) fn device_info(app: tauri::AppHandle) -> Result<DeviceInfo, String> {
@@ -39,15 +38,6 @@ pub(crate) fn save_settings(
             custom_adb_path,
         },
     )
-}
-
-#[tauri::command]
-pub(crate) async fn pick_adb_path(app: tauri::AppHandle) -> Option<String> {
-    let (tx, rx) = tokio::sync::oneshot::channel();
-    app.dialog().file().pick_file(move |path| {
-        let _ = tx.send(path.map(|p| p.to_string()));
-    });
-    rx.await.ok().flatten()
 }
 
 #[tauri::command]

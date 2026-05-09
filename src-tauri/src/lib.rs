@@ -34,7 +34,6 @@ pub fn run() {
             tauri_commands::adb_status,
             tauri_commands::get_settings,
             tauri_commands::save_settings,
-            tauri_commands::pick_adb_path,
             tauri_commands::detect_adb_path,
             tauri_commands::check_adb_validity,
         ])
