@@ -1,3 +1,4 @@
+use crate::adb_resolver::resolve_external_adb_path;
 use crate::settings::AppSettings;
 use adb_client::{
     ADBDeviceExt, server::ADBServer, server_device::ADBServerDevice, usb::ADBUSBDevice,
@@ -12,7 +13,6 @@ use std::str::from_utf8;
 pub(crate) enum AdbMode {
     #[default]
     Auto,
-    System,
     Builtin,
 }
 
@@ -59,28 +59,12 @@ fn try_system_adb(adb_path: Option<String>) -> Option<AdbDevice> {
 }
 
 pub(crate) fn get_connected_device(settings: &AppSettings) -> Option<AdbDevice> {
-    let adb_path = settings.custom_adb_path.clone();
     match settings.adb_mode {
         AdbMode::Auto => {
-            if let Some(device) = try_system_adb(adb_path) {
-                return Some(device);
-            }
-            match ADBUSBDevice::autodetect() {
-                Ok(device) => Some(AdbDevice::Usb(device)),
-                Err(what) => {
-                    println!("Error: {:?}", what);
-                    None
-                }
-            }
+            let resolved = resolve_external_adb_path(settings.custom_adb_path.as_deref());
+            try_system_adb(resolved).or_else(|| ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb))
         }
-        AdbMode::System => try_system_adb(adb_path),
-        AdbMode::Builtin => match ADBUSBDevice::autodetect() {
-            Ok(device) => Some(AdbDevice::Usb(device)),
-            Err(what) => {
-                println!("Error: {:?}", what);
-                None
-            }
-        },
+        AdbMode::Builtin => ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb),
     }
 }
 

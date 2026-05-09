@@ -5,7 +5,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'outlined'
 }
 
-const base = "font-sans text-sm px-4 py-1.5 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+const base = "font-sans text-sm px-4 py-1 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
 
 const variants = {
   primary: "border-none bg-primary text-white hover:bg-primary-dark",

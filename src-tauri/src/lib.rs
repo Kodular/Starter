@@ -7,6 +7,7 @@ use tauri::Manager;
 use tauri_plugin_dialog::DialogExt;
 
 mod adb_commands;
+mod adb_resolver;
 mod server;
 mod settings;
 
@@ -49,30 +50,18 @@ async fn pick_adb_path(app: tauri::AppHandle) -> Option<String> {
 }
 
 #[tauri::command]
+fn check_adb_validity(path: String) -> Option<String> {
+    adb_resolver::check_adb_validity_impl(&path)
+}
+
+#[tauri::command]
 fn detect_adb_path(app: tauri::AppHandle) -> Option<String> {
     let settings = read_settings(&app);
-
-    // Custom path takes priority if set
-    if let Some(custom) = settings.custom_adb_path.filter(|s| !s.is_empty()) {
-        return Some(custom);
-    }
-
-    // Search PATH for the adb binary
-    let path_var = std::env::var_os("PATH")?;
-    let adb_names: &[&str] = if cfg!(windows) {
-        &["adb.exe", "adb"]
-    } else {
-        &["adb"]
-    };
-    for dir in std::env::split_paths(&path_var) {
-        for name in adb_names {
-            let candidate = dir.join(name);
-            if candidate.exists() {
-                return Some(candidate.to_string_lossy().into_owned());
-            }
-        }
-    }
-    None
+    let custom = settings
+        .custom_adb_path
+        .as_deref()
+        .filter(|s| !s.is_empty());
+    adb_resolver::detect_adb_path_impl(custom)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -97,7 +86,8 @@ pub fn run() {
             get_settings,
             save_settings,
             pick_adb_path,
-            detect_adb_path
+            detect_adb_path,
+            check_adb_validity
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

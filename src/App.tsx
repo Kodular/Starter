@@ -35,12 +35,12 @@ function App() {
               <p>Connect your device via USB to see device info</p>
             )}
           </main>
-          <footer className="flex justify-between items-center gap-2 px-4 py-2 border-t border-gray-200">
-            <p>© Junnovate Limited</p>
+          <footer className="flex items-center gap-2 px-4 py-2 border-t border-gray-200">
+            <span className="text-xs font-semibold text-gray-600">v{tauriConfJson.version}</span>
+            <span className="text-xs text-gray-400">© Junnovate Limited</span>
             <div className="flex-1"/>
-            <span className="text-xs text-gray-400">v{tauriConfJson.version}</span>
-            <a href="https://docs.kodular.io/guides/live-development/usb/" target="_blank">Guide</a>
-            <a href="https://github.com/Kodular/Starter" target="_blank">Source Code</a>
+            <a href="https://docs.kodular.io/guides/live-development/usb/" target="_blank" className="text-xs text-primary hover:underline">Guide</a>
+            <a href="https://github.com/Kodular/Starter" target="_blank" className="text-xs text-primary hover:underline">Source Code</a>
           </footer>
         </>
       )}
