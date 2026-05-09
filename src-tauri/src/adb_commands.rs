@@ -67,7 +67,7 @@ pub(crate) fn get_connected_device(settings: &AppSettings) -> Option<AdbDevice> 
     }
 }
 
-fn getprop_from_device(device: &mut AdbDevice, property: &str) -> Option<String> {
+fn getprop(device: &mut AdbDevice, property: &str) -> Option<String> {
     let mut buf = Vec::new();
     device
         .shell_command(&format!("getprop {property}"), Some(&mut buf), None)
@@ -76,27 +76,28 @@ fn getprop_from_device(device: &mut AdbDevice, property: &str) -> Option<String>
 }
 
 pub(crate) fn get_device_serial(device: &mut AdbDevice) -> Option<String> {
-    getprop_from_device(device, "ro.serialno")
-}
-
-fn get_device_model(device: &mut AdbDevice) -> Option<String> {
-    getprop_from_device(device, "ro.product.model")
-}
-
-fn get_device_android_version(device: &mut AdbDevice) -> Option<String> {
-    getprop_from_device(device, "ro.build.version.release")
-}
-
-fn get_device_sdk_version(device: &mut AdbDevice) -> Option<String> {
-    getprop_from_device(device, "ro.build.version.sdk")
+    getprop(device, "ro.serialno")
 }
 
 pub(crate) fn get_device_info(device: &mut AdbDevice) -> Option<DeviceInfo> {
+    let mut buf = Vec::new();
+    device
+        .shell_command(
+            &"getprop ro.serialno; \
+              getprop ro.product.model; \
+              getprop ro.build.version.release; \
+              getprop ro.build.version.sdk",
+            Some(&mut buf),
+            None,
+        )
+        .ok()?;
+    let text = std::str::from_utf8(&buf).ok()?;
+    let mut lines = text.lines();
     Some(DeviceInfo {
-        serial_no: get_device_serial(device)?,
-        model: get_device_model(device)?,
-        android_version: get_device_android_version(device)?,
-        sdk_version: get_device_sdk_version(device)?,
+        serial_no: lines.next()?.trim().to_string(),
+        model: lines.next()?.trim().to_string(),
+        android_version: lines.next()?.trim().to_string(),
+        sdk_version: lines.next()?.trim().to_string(),
     })
 }
 
