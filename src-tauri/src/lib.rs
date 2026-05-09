@@ -9,6 +9,7 @@ use tauri_plugin_dialog::DialogExt;
 mod adb_commands;
 mod adb_resolver;
 mod server;
+mod server_routes;
 mod settings;
 
 #[tauri::command]
