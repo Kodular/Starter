@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {type DeviceInfo, useAdbStatus, useDeviceInfo, useServerStatus} from "./hooks.ts";
+import {type CompanionStatus, type DeviceInfo, useAdbStatus, useDeviceInfo, useServerStatus} from "./hooks.ts";
 import tauriConfJson from "../src-tauri/tauri.conf.json";
 import {SettingsPanel} from "./SettingsPanel.tsx";
 import {IconButton} from "./components/IconButton.tsx";
@@ -61,6 +61,13 @@ function AdbServiceStatus() {
   return <StatusBadge label="ADB service" isRunning={isAdbRunning}/>
 }
 
+function CompanionStatusDisplay({status}: { status: CompanionStatus }) {
+  if (status.status === "Installed") {
+    return <p>Companion App: <span className="text-green-600">{status.version_name} ({status.version_code})</span></p>;
+  }
+  return <p>Companion App: <span className="text-red-500">Not installed</span></p>;
+}
+
 function DeviceInfo({deviceInfo}: { deviceInfo: DeviceInfo }) {
   return (
     <div className="border border-gray-200 rounded-2xl w-fit">
@@ -70,6 +77,7 @@ function DeviceInfo({deviceInfo}: { deviceInfo: DeviceInfo }) {
         <p>Model: {deviceInfo.model}</p>
         <p>Android Version: {deviceInfo.android_version}</p>
         <p>SDK Version: {deviceInfo.sdk_version}</p>
+        <CompanionStatusDisplay status={deviceInfo.companion_status}/>
       </div>
     </div>
   )

@@ -18,11 +18,22 @@ pub(crate) enum AdbMode {
 }
 
 #[derive(Serialize)]
+#[serde(tag = "status")]
+pub(crate) enum CompanionStatus {
+    Installed {
+        version_name: String,
+        version_code: String,
+    },
+    NotInstalled,
+}
+
+#[derive(Serialize)]
 pub(crate) struct DeviceInfo {
     serial_no: String,
     model: String,
     android_version: String,
     sdk_version: String,
+    companion_status: CompanionStatus,
 }
 
 pub(crate) enum AdbDevice {
@@ -79,25 +90,58 @@ pub(crate) fn get_device_serial(device: &mut AdbDevice) -> Option<String> {
     getprop(device, "ro.serialno")
 }
 
+// Parses CompanionStatus from lines of dumpsys output, skipping "Broken pipe" errors
+// that appear when grep -m1 causes dumpsys to receive SIGPIPE.
+fn parse_companion_status(lines: &mut std::str::Lines<'_>) -> CompanionStatus {
+    let version_name = lines
+        .find(|l| l.contains("versionName="))
+        .and_then(|l| l.trim().split_once('='))
+        .map(|(_, v)| v.trim().to_string());
+    let version_code = lines
+        .find(|l| l.contains("versionCode="))
+        .and_then(|l| l.trim().split_once('='))
+        .and_then(|(_, v)| v.split_whitespace().next().map(str::to_string));
+    log::info!("parse_companion_status: version_name={version_name:?} version_code={version_code:?}");
+    match (version_name, version_code) {
+        (Some(version_name), Some(version_code)) if !version_name.is_empty() => {
+            CompanionStatus::Installed { version_name, version_code }
+        }
+        _ => {
+            log::info!("parse_companion_status: companion app not found or version fields missing");
+            CompanionStatus::NotInstalled
+        }
+    }
+}
+
 pub(crate) fn get_device_info(device: &mut AdbDevice) -> Option<DeviceInfo> {
     let mut buf = Vec::new();
     device
         .shell_command(
-            &"getprop ro.serialno; \
-              getprop ro.product.model; \
-              getprop ro.build.version.release; \
-              getprop ro.build.version.sdk",
+            &format!(
+                "getprop ro.serialno; \
+                 getprop ro.product.model; \
+                 getprop ro.build.version.release; \
+                 getprop ro.build.version.sdk; \
+                 dumpsys package {COMPANION_PKG_NAME} | grep -m1 versionName; \
+                 dumpsys package {COMPANION_PKG_NAME} | grep -m1 versionCode"
+            ),
             Some(&mut buf),
             None,
         )
         .ok()?;
     let text = std::str::from_utf8(&buf).ok()?;
     let mut lines = text.lines();
+    let serial_no = lines.next()?.trim().to_string();
+    let model = lines.next()?.trim().to_string();
+    let android_version = lines.next()?.trim().to_string();
+    let sdk_version = lines.next()?.trim().to_string();
+    let companion_status = parse_companion_status(&mut lines);
     Some(DeviceInfo {
-        serial_no: lines.next()?.trim().to_string(),
-        model: lines.next()?.trim().to_string(),
-        android_version: lines.next()?.trim().to_string(),
-        sdk_version: lines.next()?.trim().to_string(),
+        serial_no,
+        model,
+        android_version,
+        sdk_version,
+        companion_status,
     })
 }
 

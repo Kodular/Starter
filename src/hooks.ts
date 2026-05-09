@@ -20,11 +20,16 @@ export function useServerStatus() {
   return data;
 }
 
+export type CompanionStatus =
+  | { status: "Installed"; version_name: string; version_code: string }
+  | { status: "NotInstalled" }
+
 export type DeviceInfo = {
   serial_no: string;
   model: string;
   android_version: string;
   sdk_version: string;
+  companion_status: CompanionStatus;
 }
 
 export function useAdbStatus() {
