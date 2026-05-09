@@ -1,4 +1,5 @@
-import {type CompanionStatus, useAdbStatus, useDeviceInfo, useServerStatus} from "#/hooks.ts";
+import { type CompanionStatus, useAdbState } from "#/hooks/useAdbState";
+import { useLocalServerStatus } from "#/hooks/useLocalServerStatus";
 import tauriConfJson from "../../src-tauri/tauri.conf.json";
 import {StatusBadge} from "#/components/StatusBadge.tsx";
 
@@ -25,13 +26,13 @@ export function MainView() {
 }
 
 function LocalServerStatus() {
-  const isServerRunning = useServerStatus();
-  return <StatusBadge label="Starter server" isRunning={isServerRunning}/>
+  const status = useLocalServerStatus();
+  return <StatusBadge label="Starter server" isRunning={status?.status === 'Running'}/>
 }
 
 function AdbServiceStatus() {
-  const isAdbRunning = useAdbStatus();
-  return <StatusBadge label="ADB service" isRunning={isAdbRunning}/>
+  const adbState = useAdbState();
+  return <StatusBadge label="ADB service" isRunning={adbState?.status === 'Available'}/>
 }
 
 function CompanionStatusDisplay({status}: { status: CompanionStatus }) {
@@ -42,7 +43,8 @@ function CompanionStatusDisplay({status}: { status: CompanionStatus }) {
 }
 
 function DeviceInfoPanel() {
-  const deviceInfo = useDeviceInfo();
+  const adbState = useAdbState();
+  const deviceInfo = adbState?.status === 'Available' ? adbState.device_info : undefined;
   if (!deviceInfo) {
     return <p>Connect your device via USB to see device info</p>;
   }

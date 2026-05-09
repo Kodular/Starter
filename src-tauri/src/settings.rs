@@ -1,20 +1,37 @@
 use crate::adb_commands::AdbMode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
-use tauri_plugin_store::StoreExt;
+use tauri::Wry;
+use tauri_plugin_store::{Store, StoreExt};
 
 const STORE_NAME: &str = "settings.json";
 
-#[derive(Default, Serialize, Deserialize)]
-pub(crate) struct AppSettings {
-    pub(crate) adb_mode: AdbMode,
-    pub(crate) custom_adb_path: Option<String>,
+fn default_true() -> bool {
+    true
 }
 
-pub(crate) fn read_settings(app: &AppHandle) -> AppSettings {
-    app.store(STORE_NAME)
-        .ok()
-        .map(|store| AppSettings {
+#[derive(Clone, Serialize, Deserialize)]
+pub(crate) struct AppSettings {
+    #[serde(default)]
+    pub(crate) adb_mode: AdbMode,
+    pub(crate) custom_adb_path: Option<String>,
+    #[serde(default = "default_true")]
+    pub(crate) kill_adb_on_exit: bool,
+}
+
+impl Default for AppSettings {
+    fn default() -> Self {
+        Self {
+            adb_mode: AdbMode::default(),
+            custom_adb_path: None,
+            kill_adb_on_exit: true,
+        }
+    }
+}
+
+impl AppSettings {
+    fn from_store(store: &Store<Wry>) -> Self {
+        Self {
             adb_mode: store
                 .get("adb_mode")
                 .and_then(|v| serde_json::from_value(v).ok())
@@ -22,19 +39,17 @@ pub(crate) fn read_settings(app: &AppHandle) -> AppSettings {
             custom_adb_path: store
                 .get("custom_adb_path")
                 .and_then(|v| serde_json::from_value(v).ok()),
-        })
-        .unwrap_or_default()
+            kill_adb_on_exit: store
+                .get("kill_adb_on_exit")
+                .and_then(|v| serde_json::from_value(v).ok())
+                .unwrap_or(true),
+        }
+    }
 }
 
-pub(crate) fn write_settings(app: &AppHandle, settings: AppSettings) -> Result<(), String> {
-    let store = app.store(STORE_NAME).map_err(|e| e.to_string())?;
-    store.set(
-        "adb_mode",
-        serde_json::to_value(&settings.adb_mode).map_err(|e| e.to_string())?,
-    );
-    store.set(
-        "custom_adb_path",
-        serde_json::to_value(&settings.custom_adb_path).map_err(|e| e.to_string())?,
-    );
-    store.save().map_err(|e| e.to_string())
+pub(crate) fn read_settings(app: &AppHandle) -> AppSettings {
+    app.store(STORE_NAME)
+        .ok()
+        .map(|store| AppSettings::from_store(&store))
+        .unwrap_or_default()
 }

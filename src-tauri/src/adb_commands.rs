@@ -1,4 +1,4 @@
-use crate::adb_resolver::resolve_external_adb_path;
+use crate::adb_resolver::detect_adb_path;
 use crate::settings::AppSettings;
 use adb_client::{
     ADBDeviceExt, server::ADBServer, server_device::ADBServerDevice, usb::ADBUSBDevice,
@@ -6,8 +6,16 @@ use adb_client::{
 use serde::{Deserialize, Serialize};
 use std::io::{Write, stdout};
 use std::net::{Ipv4Addr, SocketAddrV4};
+use std::process::Command;
 
 const COMPANION_PKG_NAME: &str = "io.makeroid.companion";
+
+#[derive(Serialize, Clone, PartialEq)]
+#[serde(tag = "status")]
+pub(crate) enum AdbState {
+    Unavailable,
+    Available { device_info: Option<DeviceInfo> },
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
@@ -17,7 +25,7 @@ pub(crate) enum AdbMode {
     Builtin,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone, PartialEq)]
 #[serde(tag = "status")]
 pub(crate) enum CompanionStatus {
     Installed {
@@ -27,7 +35,7 @@ pub(crate) enum CompanionStatus {
     NotInstalled,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone, PartialEq)]
 pub(crate) struct DeviceInfo {
     serial_no: String,
     model: String,
@@ -57,7 +65,7 @@ impl AdbDevice {
 
 pub(crate) const ADB_SERVER_ADDR: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 5037);
 
-fn try_system_adb(adb_path: Option<String>) -> Option<AdbDevice> {
+pub(crate) fn try_system_adb(adb_path: Option<String>) -> Option<AdbDevice> {
     let mut server = ADBServer::new_from_path(ADB_SERVER_ADDR, adb_path);
     if server.version().is_err() {
         return None;
@@ -69,7 +77,7 @@ fn try_system_adb(adb_path: Option<String>) -> Option<AdbDevice> {
 pub(crate) fn get_connected_device(settings: &AppSettings) -> Option<AdbDevice> {
     match settings.adb_mode {
         AdbMode::Auto => {
-            let resolved = resolve_external_adb_path(settings.custom_adb_path.as_deref());
+            let resolved = detect_adb_path(settings.custom_adb_path.as_deref());
             try_system_adb(resolved).or_else(|| ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb))
         }
         AdbMode::Builtin => ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb),
@@ -146,6 +154,11 @@ pub(crate) fn get_device_info(device: &mut AdbDevice) -> Option<DeviceInfo> {
         sdk_version,
         companion_status,
     })
+}
+
+pub(crate) fn kill_adb_server(adb_path: Option<String>) {
+    let path = adb_path.unwrap_or_else(|| "adb".to_string());
+    let _ = Command::new(&path).arg("kill-server").output();
 }
 
 pub(crate) fn start_companion(device_serial: &str, settings: &AppSettings) -> Result<(), ()> {

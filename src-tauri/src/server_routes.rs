@@ -1,10 +1,11 @@
 use crate::adb_commands::{get_connected_device, get_device_serial, start_companion};
+use crate::app_state::AppState;
 use crate::settings::read_settings;
 use axum::Json;
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
 use serde_json::json;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 const VERSION: u32 = 2;
 
@@ -16,8 +17,9 @@ pub(crate) async fn ping() -> impl IntoResponse {
     Json(json!({ "status": "OK", "version": VERSION }))
 }
 
-pub(crate) async fn app_settings(State(app): State<AppHandle>) -> impl IntoResponse {
-    Json(read_settings(&app))
+pub(crate) async fn app_state(State(app): State<AppHandle>) -> impl IntoResponse {
+    let state = app.state::<AppState>().lock().unwrap().clone();
+    Json(state)
 }
 
 pub(crate) async fn device_connection_status(State(app): State<AppHandle>) -> impl IntoResponse {

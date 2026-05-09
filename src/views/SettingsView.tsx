@@ -1,8 +1,10 @@
 import {Button} from "#/components/Button.tsx";
+import {Checkbox} from "#/components/Checkbox.tsx";
 import {Field} from "#/components/Field.tsx";
 import {Input} from "#/components/Input.tsx";
 import {Select} from "#/components/Select.tsx";
-import {useAppSettings, useCustomAdbPath, useDetectedAdbPath} from "#/hooks.ts";
+import {useCustomAdbPath, useDetectedAdbPath} from "#/hooks/misc";
+import { setAdbMode, setCustomAdbPath, setKillAdbOnExit, useAppSettings } from "#/hooks/useAppSettings";
 
 function ValidityBadge({validity}: { validity: string | null }) {
   return (
@@ -23,22 +25,22 @@ function Message({variant, children}: { variant: keyof typeof MESSAGE_VARIANTS; 
 }
 
 export function SettingsView({onClose}: { onClose: () => void }) {
-  const {adbMode, setAdbMode, customAdbPath, setCustomAdbPath, save, saved} = useAppSettings();
+  const {adbMode, customAdbPath, killAdbOnExit, save, saved} = useAppSettings();
   const {customValidity, checking, test, browse, clear, onBlur} = useCustomAdbPath(customAdbPath, setCustomAdbPath);
-  const {detectedPath, detectedValidity, refresh} = useDetectedAdbPath();
+  const {detectedPath, detectedValidity, checkingDetected, refresh, testDetected} = useDetectedAdbPath();
 
   const saveBlocked = adbMode === 'auto' && customAdbPath !== '' && customValidity === null;
 
   async function handleSave(e: React.SubmitEvent) {
     e.preventDefault();
-    await save(customAdbPath || null);
+    await save();
     refresh();
   }
 
   return (
     <div className="flex-1 min-h-0 flex flex-col bg-white">
       <form className="flex-1 min-h-0 flex flex-col" onSubmit={handleSave}>
-        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-5 p-4">
           <Field label="ADB Mode" htmlFor="adb-mode">
             <Select
               id="adb-mode"
@@ -83,7 +85,28 @@ export function SettingsView({onClose}: { onClose: () => void }) {
 
               <Field label="Detected ADB">
                 <p className="text-xs text-gray-500 font-mono break-all py-1">{detectedPath ?? 'Not found'}</p>
-                {detectedValidity !== undefined && <ValidityBadge validity={detectedValidity} />}
+                <div className="flex items-center gap-2 mt-1">
+                  {detectedValidity !== undefined && <ValidityBadge validity={detectedValidity} />}
+                  {detectedPath && (
+                    <Button
+                      variant="outlined"
+                      className="text-xs px-2 py-0.5"
+                      onClick={testDetected}
+                      disabled={checkingDetected}
+                    >
+                      {checkingDetected ? 'Testing…' : 'Test'}
+                    </Button>
+                  )}
+                </div>
+              </Field>
+
+              <Field label="On Exit">
+                <Checkbox
+                  label="Kill ADB server when app closes"
+                  checked={killAdbOnExit}
+                  onChange={(e) => setKillAdbOnExit(e.target.checked)}
+                />
+                <p className="text-xs text-gray-400">Disable if you share ADB with Android Studio or other tools.</p>
               </Field>
             </>
           )}
