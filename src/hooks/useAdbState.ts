@@ -16,6 +16,7 @@ export type DeviceInfo = {
 };
 
 export type AdbState =
+| { status: 'Initialising'; }
 | { status: 'Unavailable'; }
 | { status: 'Available'; device_info: DeviceInfo | null; };
 

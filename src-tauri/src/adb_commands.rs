@@ -13,6 +13,7 @@ const COMPANION_PKG_NAME: &str = "io.makeroid.companion";
 #[derive(Serialize, Clone, PartialEq)]
 #[serde(tag = "status")]
 pub(crate) enum AdbState {
+    Initialising,
     Unavailable,
     Available { device_info: Option<DeviceInfo> },
 }

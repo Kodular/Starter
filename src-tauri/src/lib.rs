@@ -47,7 +47,7 @@ pub fn run() {
         .setup(|app| {
             app.store("settings.json").map_err(|e| e.to_string())?;
             app.manage(Mutex::new(app_state::AppStateInner {
-                adb_state: AdbState::Unavailable,
+                adb_state: AdbState::Initialising,
                 local_server_status: LocalServerStatus::Starting,
             }));
             tauri::async_runtime::spawn(server::launch_server(app.handle().clone()));

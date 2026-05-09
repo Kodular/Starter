@@ -27,12 +27,14 @@ export function MainView() {
 
 function LocalServerStatus() {
   const status = useLocalServerStatus();
-  return <StatusBadge label="Starter server" isRunning={status?.status === 'Running'}/>
+  const variant = !status ? 'checking' : status.status === 'Running' ? 'running' : 'stopped';
+  return <StatusBadge label="Starter server" variant={variant}/>
 }
 
 function AdbServiceStatus() {
   const adbState = useAdbState();
-  return <StatusBadge label="ADB service" isRunning={adbState?.status === 'Available'}/>
+  const variant = (!adbState || adbState.status === 'Initialising') ? 'checking' : adbState.status === 'Available' ? 'running' : 'stopped';
+  return <StatusBadge label="ADB service" variant={variant}/>
 }
 
 function CompanionStatusDisplay({status}: { status: CompanionStatus }) {
