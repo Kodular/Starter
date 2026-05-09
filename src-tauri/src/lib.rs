@@ -1,11 +1,10 @@
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_log::log::LevelFilter;
-use tauri_plugin_store::StoreExt;
 
 use crate::{
-    adb_commands::{AdbState, ResolvedAdbMode},
-    app_state::{AppState, LocalServerStatus},
+    adb_commands::ResolvedAdbMode,
+    app_state::{AppState, AppStateInner},
 };
 
 mod adb_commands;
@@ -55,15 +54,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             log::info!("Setting up application state...");
-            app.store("settings.json").map_err(|e| e.to_string())?;
             let initial_settings = settings::read_settings(app.handle());
-            let resolved_adb_mode = adb_resolver::resolve_adb_mode(&initial_settings);
-            log::info!("Resolved ADB mode: {:?}", resolved_adb_mode);
-            app.manage(Mutex::new(app_state::AppStateInner {
-                adb_state: AdbState::Initialising,
-                local_server_status: LocalServerStatus::Starting,
-                resolved_adb_mode,
-            }));
+            app.manage(Mutex::new(AppStateInner::init(&initial_settings)));
             log::info!("Launching local server...");
             tauri::async_runtime::spawn(server::launch_server(app.handle().clone()));
             log::info!("Starting ADB monitor...");

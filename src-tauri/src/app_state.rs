@@ -1,4 +1,8 @@
-use crate::adb_commands::{AdbState, ResolvedAdbMode};
+use crate::{
+    adb_commands::{AdbState, ResolvedAdbMode},
+    adb_resolver,
+    settings::AppSettings,
+};
 use serde::Serialize;
 use std::sync::Mutex;
 
@@ -15,6 +19,18 @@ pub struct AppStateInner {
     pub adb_state: AdbState,
     pub local_server_status: LocalServerStatus,
     pub resolved_adb_mode: ResolvedAdbMode,
+}
+
+impl AppStateInner {
+    pub fn init(settings: &AppSettings) -> Self {
+        let resolved_adb_mode = adb_resolver::resolve_adb_mode(settings);
+        log::info!("Resolved ADB mode: {:?}", resolved_adb_mode);
+        Self {
+            adb_state: AdbState::Initialising,
+            local_server_status: LocalServerStatus::Starting,
+            resolved_adb_mode,
+        }
+    }
 }
 
 pub type AppState = Mutex<AppStateInner>;
