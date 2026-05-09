@@ -72,9 +72,9 @@ impl AdbDevice {
     }
 }
 
-pub(crate) const ADB_SERVER_ADDR: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 5037);
+const ADB_SERVER_ADDR: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 5037);
 
-pub(crate) fn try_system_adb(adb_path: Option<String>) -> Option<AdbDevice> {
+fn try_system_adb(adb_path: Option<String>) -> Option<AdbDevice> {
     let mut server = ADBServer::new_from_path(ADB_SERVER_ADDR, adb_path);
     if server.version().is_err() {
         return None;
