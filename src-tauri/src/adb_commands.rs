@@ -1,5 +1,3 @@
-use crate::adb_resolver::detect_adb_path;
-use crate::settings::AppSettings;
 use adb_client::{
     ADBDeviceExt, server::ADBServer, server_device::ADBServerDevice, usb::ADBUSBDevice,
 };
@@ -48,7 +46,7 @@ pub(crate) enum CompanionStatus {
 
 #[derive(Serialize, Clone, PartialEq)]
 pub(crate) struct DeviceInfo {
-    serial_no: String,
+    pub(crate) serial_no: String,
     model: String,
     android_version: String,
     sdk_version: String,
@@ -85,26 +83,12 @@ pub(crate) fn try_system_adb(adb_path: Option<String>) -> Option<AdbDevice> {
     Some(AdbDevice::Server(device))
 }
 
-pub(crate) fn get_connected_device(settings: &AppSettings) -> Option<AdbDevice> {
-    match settings.adb_mode {
-        AdbMode::Auto => {
-            let resolved = detect_adb_path(settings.custom_adb_path.as_deref());
-            try_system_adb(resolved).or_else(|| ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb))
-        }
-        AdbMode::Builtin => ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb),
+fn get_connected_device(resolved: &ResolvedAdbMode) -> Option<AdbDevice> {
+    match resolved {
+        ResolvedAdbMode::SystemAdb(path) => try_system_adb(path.clone())
+            .or_else(|| ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb)),
+        ResolvedAdbMode::BuiltinUsb => ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb),
     }
-}
-
-fn getprop(device: &mut AdbDevice, property: &str) -> Option<String> {
-    let mut buf = Vec::new();
-    device
-        .shell_command(&format!("getprop {property}"), Some(&mut buf), None)
-        .ok()?;
-    std::str::from_utf8(&buf).ok().map(|s| s.trim().to_string())
-}
-
-pub(crate) fn get_device_serial(device: &mut AdbDevice) -> Option<String> {
-    getprop(device, "ro.serialno")
 }
 
 // Parses CompanionStatus from lines of dumpsys output, skipping "Broken pipe" errors
@@ -172,12 +156,8 @@ pub(crate) fn kill_adb_server(adb_path: Option<String>) {
     let _ = Command::new(&path).arg("kill-server").output();
 }
 
-pub(crate) fn start_companion(device_serial: &str, settings: &AppSettings) -> Result<(), ()> {
-    let mut device = get_connected_device(settings).ok_or(())?;
-    let serial_no = get_device_serial(&mut device).ok_or(())?;
-    if serial_no != device_serial {
-        return Err(());
-    }
+pub(crate) fn start_companion(resolved: &ResolvedAdbMode) -> Result<(), ()> {
+    let mut device = get_connected_device(resolved).ok_or(())?;
     let _ = device.shell_command(
         &format!(
             "am start -a android.intent.action.MAIN -n {}/.Screen1 --ez rundirect true",
