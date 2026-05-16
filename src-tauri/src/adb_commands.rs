@@ -26,7 +26,7 @@ pub(crate) enum AdbMode {
 
 /// The resolved ADB method after applying settings and path detection.
 /// Computed once on startup and on settings change — not per-poll.
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone, PartialEq)]
 pub(crate) enum ResolvedAdbMode {
     /// Use system ADB daemon. `None` means fall back to $PATH.
     SystemAdb(Option<String>),

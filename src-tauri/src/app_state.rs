@@ -1,7 +1,7 @@
 use crate::{
     adb_commands::{AdbState, ResolvedAdbMode},
     adb_resolver,
-    settings::AppSettings,
+    app_settings::AppSettings,
 };
 use serde::Serialize;
 use std::sync::Mutex;
@@ -29,6 +29,18 @@ impl AppStateInner {
             adb_state: AdbState::Initialising,
             local_server_status: LocalServerStatus::Starting,
             resolved_adb_mode,
+        }
+    }
+
+    pub fn update(&mut self, settings: &AppSettings) {
+        let new_mode = adb_resolver::resolve_adb_mode(settings);
+        if new_mode != self.resolved_adb_mode {
+            log::info!(
+                "ADB mode changed: {:?} -> {:?}",
+                self.resolved_adb_mode,
+                new_mode
+            );
+            self.resolved_adb_mode = new_mode;
         }
     }
 }

@@ -1,7 +1,7 @@
 use crate::adb_commands::AdbState;
 use crate::adb_resolver;
+use crate::app_settings::AppSettings;
 use crate::app_state::{AppState, LocalServerStatus};
-use crate::settings::read_settings;
 use tauri::{AppHandle, State};
 
 #[tauri::command]
@@ -16,7 +16,7 @@ pub(crate) fn local_server_status(state: State<'_, AppState>) -> LocalServerStat
 
 #[tauri::command]
 pub(crate) fn detect_adb_path(app: AppHandle) -> Option<String> {
-    let settings = read_settings(&app);
+    let settings = AppSettings::read(&app);
     adb_resolver::detect_adb_path(settings.custom_adb_path.as_deref())
 }
 

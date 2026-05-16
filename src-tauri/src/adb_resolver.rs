@@ -1,5 +1,5 @@
 use crate::adb_commands::{AdbMode, ResolvedAdbMode};
-use crate::settings::AppSettings;
+use crate::app_settings::AppSettings;
 use std::{path::Path, process::Command};
 
 #[cfg(windows)]

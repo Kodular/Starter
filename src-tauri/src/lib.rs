@@ -1,24 +1,25 @@
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Listener, Manager};
 use tauri_plugin_log::log::LevelFilter;
 
 use crate::{
     adb_commands::ResolvedAdbMode,
+    app_settings::AppSettings,
     app_state::{AppState, AppStateInner},
 };
 
 mod adb_commands;
 mod adb_monitor;
 mod adb_resolver;
+mod app_settings;
 mod app_state;
 mod server;
 mod server_routes;
-mod settings;
 mod tauri_commands;
 
 fn on_exit(app: &AppHandle) {
     log::info!("Exiting Starter...");
-    let settings = settings::read_settings(app);
+    let settings = AppSettings::read(app);
     if settings.kill_adb_on_exit {
         let resolved = app
             .state::<AppState>()
@@ -54,12 +55,16 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             log::info!("Setting up application state...");
-            let initial_settings = settings::read_settings(app.handle());
+            let initial_settings = AppSettings::read(app.handle());
             app.manage(Mutex::new(AppStateInner::init(&initial_settings)));
+            // Listener for settings changes will be registered once the app is running
+
             log::info!("Launching local server...");
             tauri::async_runtime::spawn(server::launch_server(app.handle().clone()));
+
             log::info!("Starting ADB monitor...");
             tauri::async_runtime::spawn(adb_monitor::run(app.handle().clone()));
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -70,9 +75,19 @@ pub fn run() {
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|app, event| {
-            if let tauri::RunEvent::Exit = event {
-                on_exit(app);
+        .run(|app, event| match event {
+            tauri::RunEvent::Ready => {
+                log::info!("Application is ready...");
+                let ah = app.clone();
+                app.listen("store://change", move |_event| {
+                    log::info!("Settings changed, updating application state...");
+                    let settings = AppSettings::read(&ah);
+                    let state = ah.state::<AppState>();
+                    let mut app_state = state.lock().unwrap();
+                    app_state.update(&settings);
+                });
             }
+            tauri::RunEvent::Exit => on_exit(app),
+            _ => {}
         });
 }
