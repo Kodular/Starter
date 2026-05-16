@@ -3,33 +3,35 @@ use tauri::{AppHandle, Listener, Manager};
 use tauri_plugin_log::log::LevelFilter;
 
 use crate::{
-    adb_commands::ResolvedAdbMode,
+    adb::AdbConnectionStrategy,
     app_settings::AppSettings,
     app_state::{AppState, AppStateInner},
 };
 
-mod adb_commands;
-mod adb_monitor;
-mod adb_resolver;
+mod adb;
 mod app_settings;
 mod app_state;
-mod server;
-mod server_routes;
+mod http;
 mod tauri_commands;
 
 fn on_exit(app: &AppHandle) {
     log::info!("Exiting Starter...");
     let settings = AppSettings::read(app);
     if settings.kill_adb_on_exit {
-        let resolved = app
+        let strategy = app
             .state::<AppState>()
             .lock()
             .unwrap()
-            .resolved_adb_mode
+            .resolved_adb_strategy
             .clone();
-        if let ResolvedAdbMode::SystemAdb(path) = resolved {
-            log::info!("Killing ADB server...");
-            adb_commands::kill_adb_server(path);
+        if let AdbConnectionStrategy::PreferSystemAdb { adb_path } = strategy {
+            if let Some(path) = adb_path {
+                log::info!("Killing ADB server...");
+                adb::kill_adb_server(Some(path.to_string_lossy().into_owned()));
+            } else {
+                log::info!("Killing ADB server...");
+                adb::kill_adb_server(None);
+            }
         }
     }
 }
@@ -60,10 +62,10 @@ pub fn run() {
             // Listener for settings changes will be registered once the app is running
 
             log::info!("Launching local server...");
-            tauri::async_runtime::spawn(server::launch_server(app.handle().clone()));
+            tauri::async_runtime::spawn(http::launch_server(app.handle().clone()));
 
             log::info!("Starting ADB monitor...");
-            tauri::async_runtime::spawn(adb_monitor::run(app.handle().clone()));
+            tauri::async_runtime::spawn(adb::run_monitor(app.handle().clone()));
 
             Ok(())
         })

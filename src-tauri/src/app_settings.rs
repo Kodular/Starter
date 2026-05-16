@@ -1,4 +1,4 @@
-use crate::adb_commands::AdbMode;
+use crate::adb::AdbMode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tauri_plugin_store::{Store, StoreExt};

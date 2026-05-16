@@ -1,6 +1,7 @@
-use crate::adb_commands::{AdbMode, ResolvedAdbMode};
+use super::types::{AdbConnectionStrategy, AdbMode};
 use crate::app_settings::AppSettings;
-use std::{path::Path, process::Command};
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 #[cfg(windows)]
 const ADB_NAMES: &[&str] = &["adb.exe", "adb"];
@@ -10,9 +11,8 @@ const ADB_NAMES: &[&str] = &["adb"];
 /// Resolves an external ADB binary path using the priority chain:
 /// custom path → $ANDROID_HOME/platform-tools → $ANDROID_SDK_ROOT/platform-tools
 ///
-/// Returns `None` to signal "fall back to $PATH" — callers pass this to
-/// `ADBServer::new_from_path(..., None)` which defaults to `Command::new("adb")`.
-pub(crate) fn resolve_external_adb_path(custom: Option<&str>) -> Option<String> {
+/// Returns `None` to signal "fall back to $PATH".
+fn resolve_external_adb_path(custom: Option<&str>) -> Option<String> {
     if let Some(p) = custom
         && Path::new(p).is_file()
     {
@@ -35,7 +35,7 @@ pub(crate) fn resolve_external_adb_path(custom: Option<&str>) -> Option<String> 
 
 /// Full detection chain including explicit $PATH search, for UI display.
 /// Treats empty string as absent (same as None).
-pub(crate) fn detect_adb_path(custom: Option<&str>) -> Option<String> {
+pub fn detect_adb_path(custom: Option<&str>) -> Option<String> {
     let custom = custom.filter(|s| !s.is_empty());
 
     if let Some(path) = resolve_external_adb_path(custom) {
@@ -55,14 +55,16 @@ pub(crate) fn detect_adb_path(custom: Option<&str>) -> Option<String> {
     None
 }
 
-/// Resolves the effective ADB mode from settings, performing path detection once.
+/// Resolves the effective ADB connection strategy from settings, performing path detection once.
 /// Call this on startup and whenever settings change.
-pub(crate) fn resolve_adb_mode(settings: &AppSettings) -> ResolvedAdbMode {
+pub fn resolve_adb_strategy(settings: &AppSettings) -> AdbConnectionStrategy {
     match settings.adb_mode {
         AdbMode::Auto => {
-            ResolvedAdbMode::SystemAdb(detect_adb_path(settings.custom_adb_path.as_deref()))
+            let path =
+                detect_adb_path(settings.custom_adb_path.as_deref()).map(PathBuf::from);
+            AdbConnectionStrategy::PreferSystemAdb { adb_path: path }
         }
-        AdbMode::Builtin => ResolvedAdbMode::BuiltinUsb,
+        AdbMode::Builtin => AdbConnectionStrategy::BuiltinUsbOnly,
     }
 }
 
@@ -71,7 +73,7 @@ pub(crate) fn resolve_adb_mode(settings: &AppSettings) -> ResolvedAdbMode {
 ///
 /// Note: intentionally uses `Command` rather than `adb_client` — `adb_client` queries whatever
 /// daemon is already running over TCP, not the binary at `path`, so it can't validate a specific binary.
-pub(crate) fn test_adb_path(path: &str) -> Option<String> {
+pub fn test_adb_path(path: &str) -> Option<String> {
     if !Path::new(path).is_file() {
         return None;
     }
@@ -81,4 +83,10 @@ pub(crate) fn test_adb_path(path: &str) -> Option<String> {
     }
     let stdout = String::from_utf8_lossy(&output.stdout);
     stdout.lines().next().map(|l| l.to_string())
+}
+
+/// Kill the ADB server daemon.
+pub fn kill_adb_server(adb_path: Option<String>) {
+    let path = adb_path.unwrap_or_else(|| "adb".to_string());
+    let _ = Command::new(&path).arg("kill-server").output();
 }

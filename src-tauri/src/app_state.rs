@@ -1,6 +1,5 @@
 use crate::{
-    adb_commands::{AdbState, ResolvedAdbMode},
-    adb_resolver,
+    adb::{AdbConnectionStrategy, AdbState, resolve_adb_strategy},
     app_settings::AppSettings,
 };
 use serde::Serialize;
@@ -18,30 +17,40 @@ pub enum LocalServerStatus {
 pub struct AppStateInner {
     pub adb_state: AdbState,
     pub local_server_status: LocalServerStatus,
-    pub resolved_adb_mode: ResolvedAdbMode,
+    pub resolved_adb_strategy: AdbConnectionStrategy,
 }
 
 impl AppStateInner {
     pub fn init(settings: &AppSettings) -> Self {
-        let resolved_adb_mode = adb_resolver::resolve_adb_mode(settings);
-        log::info!("Resolved ADB mode: {:?}", resolved_adb_mode);
+        let resolved_adb_strategy = resolve_adb_strategy(settings);
+        log::info!("Resolved ADB strategy: {:?}", resolved_adb_strategy);
         Self {
             adb_state: AdbState::Initialising,
             local_server_status: LocalServerStatus::Starting,
-            resolved_adb_mode,
+            resolved_adb_strategy,
         }
     }
 
     pub fn update(&mut self, settings: &AppSettings) {
-        let new_mode = adb_resolver::resolve_adb_mode(settings);
-        if new_mode != self.resolved_adb_mode {
+        let new_strategy = resolve_adb_strategy(settings);
+        if new_strategy != self.resolved_adb_strategy {
             log::info!(
-                "ADB mode changed: {:?} -> {:?}",
-                self.resolved_adb_mode,
-                new_mode
+                "ADB strategy changed: {:?} -> {:?}",
+                self.resolved_adb_strategy,
+                new_strategy
             );
-            self.resolved_adb_mode = new_mode;
+            self.resolved_adb_strategy = new_strategy;
         }
+    }
+
+    /// Set the ADB state (encapsulated mutation).
+    pub fn set_adb_state(&mut self, state: AdbState) {
+        self.adb_state = state;
+    }
+
+    /// Set the local server status (encapsulated mutation).
+    pub fn set_server_status(&mut self, status: LocalServerStatus) {
+        self.local_server_status = status;
     }
 }
 

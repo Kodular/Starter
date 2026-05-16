@@ -1,7 +1,7 @@
-use crate::app_state::{AppState, LocalServerStatus};
-use crate::server_routes::{
+use super::routes::{
     app_state, device_connection_status, index, launch_companion_app_on_device, ping,
 };
+use crate::app_state::{AppState, LocalServerStatus};
 use axum::extract::Request;
 use axum::http::header::{CONTENT_TYPE, ORIGIN};
 use axum::http::{HeaderValue, Method};
@@ -19,11 +19,14 @@ const SERVER_ADDR: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 8004);
 const BIND_RETRIES: u8 = 5;
 
 fn set_server_status(app: &AppHandle, status: LocalServerStatus) {
-    app.state::<AppState>().lock().unwrap().local_server_status = status.clone();
+    app.state::<AppState>()
+        .lock()
+        .unwrap()
+        .set_server_status(status.clone());
     let _ = app.emit("local-server-status", status);
 }
 
-pub(crate) async fn launch_server(app: AppHandle) {
+pub async fn launch_server(app: AppHandle) {
     let listener = {
         let mut attempts = 0u8;
         loop {
