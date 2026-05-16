@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-Kodular Starter is a desktop app (Tauri v2 + React) that enables live USB testing of Kodular/MIT App Inventor apps. It exposes a local HTTP server on port 8004 that the Kodular web IDE communicates with, and bridges to an Android device via ADB (system or built-in `adb_client` crate).
+Kodular Starter is a desktop app (Tauri v2 + React) that enables live USB testing of Kodular/MIT App Inventor apps. It exposes a local HTTP server on port 8004 that the Kodular web IDE (creator.kodular.io) communicates with, and bridges to an Android device via ADB (system or built-in `adb_client` crate). Additionally, starter.kodular.io provides a quick browser page for debugging and checking the connection status.
 
 ## Commands
 
@@ -37,34 +37,67 @@ cargo test -p kodular-starter -- --nocapture
 
 ### Frontend (`src/`)
 
-- **`hooks.ts`** — Two React Query hooks, both polling every 3 seconds:
-  - `useServerStatus()` — pings `http://localhost:8004/ping` to check if the local axum server is up
-  - `useDeviceInfo()` — calls Tauri command `device_info` to get connected Android device details
-- **`App.tsx`** — Root component; shows device connection state and a toggleable settings panel
-- **`SettingsPanel.tsx`** — Calls Tauri commands `get_settings`, `save_settings`, `detect_adb_path`, and `pick_adb_path` to manage ADB configuration
-- **`components/`** — Small UI primitives (Button, Field, Input, Select, IconButton, StatusBadge) with Tailwind v4 styling
+- **`App.tsx`** — Root component with header and toggleable view between `MainView` and `SettingsView`
+- **`views/`** — Page-level components:
+  - `MainView.tsx` — Displays local server status, ADB service status, and device information
+  - `SettingsView.tsx` — ADB mode selection, custom ADB binary configuration, and app settings management
+- **`hooks/`** — Custom React and nanostores-based hooks:
+  - `useAdbState.ts` — Nanostores atom + hook for ADB state and device info; listens to `adb-state` events from Tauri
+  - `useLocalServerStatus.ts` — Nanostores atom + hook for local HTTP server status; listens to `local-server-status` events
+  - `useAppSettings.ts` — Manages app settings (adb_mode, custom_adb_path, kill_adb_on_exit)
+  - `misc.ts` — `useCustomAdbPath()` and `useDetectedAdbPath()` for ADB path detection and validation
+- **`components/`** — Small UI primitives (Button, Checkbox, Field, Input, Select, IconButton, StatusBadge) with Tailwind v4 styling
 - **`lib/cn.ts`** — `cn()` utility combining `clsx` + `tailwind-merge` for conditional class names
 
 ### Backend (`src-tauri/src/`)
 
-- **`lib.rs`** — Tauri command handlers exposed to the frontend. Spawns the axum server on startup. Registers `tauri-plugin-single-instance` (refocuses the existing window on duplicate launch). Commands: `device_info`, `adb_status`, `get_settings`, `save_settings`, `pick_adb_path`, `detect_adb_path`, `test_adb_path`.
-- **`adb_commands.rs`** — ADB logic. Supports two modes via `AdbMode` enum:
+- **`lib.rs`** — Tauri app setup. Initializes AppState, spawns the axum server and ADB monitor on startup. Registers `tauri-plugin-single-instance`. Invokes `tauri_commands` handlers.
+- **`tauri_commands.rs`** — Command handlers exposed to frontend:
+  - `adb_state()` — Returns current `AdbState` (Initialising | Unavailable | Available with device info)
+  - `local_server_status()` — Returns `LocalServerStatus` (Starting | Running | Failed)
+  - `detect_adb_path(app)` — Detects ADB path from settings or `$PATH`/`$ANDROID_HOME`
+  - `test_adb_path(path)` — Tests if a binary path is a valid ADB installation
+- **`app_state.rs`** — Shared mutable app state (`Mutex<AppStateInner>`):
+  - Holds `adb_state`, `local_server_status`, and `resolved_adb_mode`
+  - Initialized with resolved ADB mode from settings
+- **`adb_monitor.rs`** — Background task that monitors ADB device connections and updates app state, emitting `adb-state` events to the frontend
+- **`adb_commands.rs`** — ADB command execution logic. `AdbMode` enum:
   - `Auto`: tries system ADB first (via `ADBServer`), falls back to built-in USB (`ADBUSBDevice`)
   - `Builtin`: only uses `ADBUSBDevice` (no system adb required)
-- **`adb_resolver.rs`** — ADB binary resolution. `resolve_external_adb_path` walks custom path → `$ANDROID_HOME/platform-tools` → `$ANDROID_SDK_ROOT/platform-tools`, returning `None` to fall back to `$PATH`. `detect_adb_path` extends this with a full `$PATH` search for UI display. `test_adb_path` tests a binary by running `adb version`.
-- **`server.rs`** — Axum HTTP server on `0.0.0.0:8004`. Key endpoints:
-  - `/ping`, `/reset` — liveness check
-  - `/utest`, `/ucheck` — device connection status (returns serial number)
-  - `/replstart/{deviceid}` — launches the Kodular companion app on device
-  - `/settings` — returns current app settings as JSON
-  - CORS is restricted to `*.kodular.io` origins
-- **`settings.rs`** — Reads/writes `AppSettings` (adb_mode + custom_adb_path) using `tauri-plugin-store` (persisted to `settings.json` in the app data directory)
+- **`adb_resolver.rs`** — ADB binary resolution:
+  - `resolve_adb_mode()` — Returns resolved ADB mode and path based on settings
+  - `detect_adb_path()` — Finds ADB in custom path, `$ANDROID_HOME/platform-tools`, `$ANDROID_SDK_ROOT/platform-tools`, or `$PATH`
+  - `test_adb_path()` — Tests a binary by running `adb version`
+- **`server.rs`** — Axum HTTP server on `0.0.0.0:8004`. Handles retries on port binding. Registers routes and CORS layer. Emits `local-server-status` events to frontend.
+- **`server_routes.rs`** — HTTP endpoint handlers:
+  - `/` — Index/health check
+  - `/ping`, `/reset` — Liveness checks
+  - `/utest`, `/ucheck` — Device connection status (returns serial number)
+  - `/replstart/{deviceid}` — Launches Kodular companion app on device
+  - `/app-state` — Returns current app state (ADB, server, resolved mode)
+  - CORS is restricted to Kodular domains (`*.kodular.io`, `c.kodular.io`, `creator.kodular.io`)
+- **`settings.rs`** — Reads/writes `AppSettings` using `tauri-plugin-store`:
+  - `adb_mode` — `Auto` or `Builtin`
+  - `custom_adb_path` — Optional custom ADB binary path
+  - `kill_adb_on_exit` — Whether to kill system ADB server on app exit (default: true)
 
 ### Key Data Flow
 
-Web IDE (starter.kodular.io) → HTTP to localhost:8004 → axum server → ADB → Android device
+**Kodular IDE → Local Server:**
+- Web IDE (creator.kodular.io) → HTTP to localhost:8004 → axum server → ADB → Android device
 
-Tauri frontend ↔ Tauri commands (invoke) ↔ Rust backend
+**Debug Connection Check:**
+- starter.kodular.io → HTTP to localhost:8004 → quick status check
+
+**Tauri Frontend ↔ Backend:**
+- Frontend components invoke Tauri commands and listen to events
+- Backend tasks (ADB monitor, server) emit events to frontend (`adb-state`, `local-server-status`)
+- Settings persist via `tauri-plugin-store`
+
+**ADB Monitoring:**
+- ADB monitor background task continuously checks device connection state
+- Updates app state and emits `adb-state` events
+- Frontend listens via nanostores and updates UI reactively
 
 ### Styling
 
