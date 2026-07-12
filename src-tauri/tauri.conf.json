@@ -21,6 +21,10 @@
       "csp": null
     }
   },
+  "plugins": {
+    "store": null,
+    "dialog": null
+  },
   "bundle": {
     "active": true,
     "targets": "all",

@@ -1,5 +1,5 @@
 [package]
-name = "starter"
+name = "kodular-starter"
 version = "3.0.0"
 description = "Kodular Starter"
 edition = "2024"
@@ -10,7 +10,7 @@ edition = "2024"
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "starter_lib"
+name = "kodular_starter_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -19,14 +19,21 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
+tauri-plugin-store = "2"
+tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 axum = "0.8.9"
-tokio = { version = "1.52.2", features = ["full"] }
+tokio = { version = "1.52.3", features = ["full"] }
 tracing-subscriber = "0.3.23"
 tower-http = { version = "0.6.9", features = ["cors", "normalize-path"] }
 tower = "0.5.3"
 adb_client = { version = "3.2.1", features = ["usb"] }
+tauri-plugin-log = "2"
+log = "0.4.29"
+
+[profile.dev]
+incremental = true
 
 [profile.release]
 panic = "abort" # Strip expensive panic clean-up logic
@@ -34,3 +41,6 @@ codegen-units = 1 # Compile crates one after another so the compiler can optimiz
 lto = true # Enables link to optimizations
 opt-level = "s" # Optimize for binary size
 strip = true # Remove debug symbols
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = "2"

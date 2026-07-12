@@ -1,67 +1,34 @@
-import {type DeviceInfo, useDeviceInfo, useServerStatus} from "./hooks.ts";
-import tauriConfJson from "../src-tauri/tauri.conf.json";
+import {useState} from "react";
+import {SettingsView} from "#/views/SettingsView.tsx";
+import {IconButton} from "#/components/IconButton.tsx";
+import {MainView} from "#/views/MainView.tsx";
 
-function App() {
-  const deviceInfo = useDeviceInfo();
+type View = "main" | "settings";
 
+function Header({screen, onToggleSettings}: { screen: View, onToggleSettings: () => void }) {
   return (
-    <div className="app-shell">
-      <header>
-        <img src="/logo-circle-512.png" alt="Kodular Logo" style={{height: 36, width: 36}}/>
-        <h1 style={{color: '#4629a0', margin: 0}}>Kodular Starter {tauriConfJson.version}</h1>
-      </header>
-      <main>
-        <LocalServerStatus/>
-        {
-          deviceInfo ? (
-            <div>
-              <p>Device is connected via {deviceInfo.transport === "USB" ? "USB" : "WiFi"}</p>
-              <DeviceInfo deviceInfo={deviceInfo}/>
-            </div>
-          ) : (
-            <div>
-              <p>Connect your device via USB to see device info</p>
-            </div>
-          )
-        }
-
-      </main>
-      <footer>
-        <p>© Junnovate Limited</p>
-        <div style={{flexGrow: 1}}/>
-        <a href="https://docs.kodular.io/guides/live-development/usb/" target="_blank">Guide</a>
-        <a href="https://github.com/Kodular/Starter" target="_blank">Source Code</a>
-      </footer>
-    </div>
+    <header className="flex items-center gap-2 px-4 py-2 border-b border-gray-200">
+      <img src="/logo-circle-512.png" alt="Kodular Logo" className="h-7 w-7"/>
+      <span className="text-sm font-semibold text-primary">Kodular Starter</span>
+      <div className="flex-1"/>
+      <IconButton onClick={onToggleSettings} aria-label="Settings" active={screen === "settings"}>
+        <span className="w-5 h-5 bg-gray-600 mask-[url('/icons/md-settings.svg')] mask-contain mask-no-repeat mask-center"/>
+      </IconButton>
+    </header>
   );
 }
 
-function LocalServerStatus() {
-  const isServerRunning = useServerStatus();
+export default function App() {
+  const [screen, setView] = useState<View>("main");
 
   return (
-    <div className="local-server-status" data-running={isServerRunning}>
-      {isServerRunning ? (
-        <p>Local server is running</p>
+    <div className="flex flex-col h-screen">
+      <Header screen={screen} onToggleSettings={() => setView(s => s === "settings" ? "main" : "settings")}/>
+      {screen === "settings" ? (
+        <SettingsView onClose={() => setView("main")}/>
       ) : (
-        <p>Local server is not running</p>
+        <MainView/>
       )}
     </div>
-  )
+  );
 }
-
-function DeviceInfo({deviceInfo}: { deviceInfo: DeviceInfo }) {
-  return (
-    <div className="card">
-      <h4 className="title">Device Info</h4>
-      <div className="body">
-        <p>Serial No: {deviceInfo.serial_no}</p>
-        <p>Model: {deviceInfo.model}</p>
-        <p>Android Version: {deviceInfo.android_version}</p>
-        <p>SDK Version: {deviceInfo.sdk_version}</p>
-      </div>
-    </div>
-  )
-}
-
-export default App;
