@@ -3,7 +3,6 @@ use tauri::{AppHandle, Listener, Manager};
 use tauri_plugin_log::log::LevelFilter;
 
 use crate::{
-    adb::AdbConnectionStrategy,
     app_settings::AppSettings,
     app_state::{AppState, AppStateInner},
 };
@@ -18,20 +17,12 @@ fn on_exit(app: &AppHandle) {
     log::info!("Exiting Starter...");
     let settings = AppSettings::read(app);
     if settings.kill_adb_on_exit {
-        let strategy = app
-            .state::<AppState>()
-            .lock()
-            .unwrap()
-            .resolved_adb_strategy
-            .clone();
-        if let AdbConnectionStrategy::PreferSystemAdb { adb_path } = strategy {
-            if let Some(path) = adb_path {
-                log::info!("Killing ADB server...");
-                adb::kill_adb_server(Some(path.to_string_lossy().into_owned()));
-            } else {
-                log::info!("Killing ADB server...");
-                adb::kill_adb_server(None);
-            }
+        let state_handle = app.state::<AppState>();
+        let mut state = state_handle.lock().unwrap();
+        if let Some(adb_path) = state.adb_server_started_by_app.clone() {
+            log::info!("Killing ADB server started by this app...");
+            adb::kill_adb_server(&adb_path);
+            state.adb_server_started_by_app = None;
         }
     }
 }

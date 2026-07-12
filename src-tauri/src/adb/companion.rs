@@ -11,12 +11,13 @@ const COMPANION_PKG_NAME: &str = "io.makeroid.companion";
 /// Note: USB devices don't support port forwarding yet in adb_client, so the companion
 /// app launches but its tcp:8001 socket back to the IDE will not work in BuiltinUsbOnly mode.
 pub fn start_companion(strategy: &AdbConnectionStrategy) -> Result<()> {
-    let mut device =
-        super::device::get_connected_device(strategy).ok_or(AdbError::NoDeviceConnected)?;
+    let mut device = super::device::get_connected_device(strategy)
+        .map(|(device, _)| device)
+        .ok_or(AdbError::NoDeviceConnected)?;
 
     // adb_client does not support port forwarding for USB devices yet
     // (see https://github.com/cocool97/adb_client/issues/63).
-    // For BuiltinUsbOnly mode we skip the forward entirely — the companion app
+    // For BuiltinUsb mode we skip the forward entirely — the companion app
     // will launch but its tcp:8001 socket back to the IDE will not work.
     match &mut device {
         AdbDevice::Server(dev) => {

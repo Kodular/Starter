@@ -4,27 +4,31 @@ import { LazyStore } from "@tauri-apps/plugin-store";
 
 const settingsStore = new LazyStore("settings.json");
 
-const $adbMode = atom<'auto' | 'builtin'>('auto');
 const $customAdbPath = atom('');
+const $useSystemAdb = atom(true);
+const $useBuiltinAdb = atom(true);
 const $killAdbOnExit = atom(true);
 const $saved = atom(false);
 
-onMount($adbMode, () => {
+onMount($customAdbPath, () => {
   Promise.all([
-    settingsStore.get<'auto' | 'builtin'>('adb_mode'),
     settingsStore.get<string | null>('custom_adb_path'),
+    settingsStore.get<boolean>('use_system_adb'),
+    settingsStore.get<boolean>('use_builtin_adb'),
     settingsStore.get<boolean>('kill_adb_on_exit'),
-  ]).then(([adbMode, customAdbPath, killAdbOnExit]) => {
-    $adbMode.set(adbMode ?? 'auto');
+  ]).then(([customAdbPath, useSystemAdb, useBuiltinAdb, killAdbOnExit]) => {
     $customAdbPath.set(customAdbPath ?? '');
+    $useSystemAdb.set(useSystemAdb ?? true);
+    $useBuiltinAdb.set(useBuiltinAdb ?? true);
     $killAdbOnExit.set(killAdbOnExit ?? true);
   });
 });
 
 async function save() {
   await Promise.all([
-    settingsStore.set('adb_mode', $adbMode.get()),
     settingsStore.set('custom_adb_path', $customAdbPath.get() || null),
+    settingsStore.set('use_system_adb', $useSystemAdb.get()),
+    settingsStore.set('use_builtin_adb', $useBuiltinAdb.get()),
     settingsStore.set('kill_adb_on_exit', $killAdbOnExit.get()),
   ]);
   await settingsStore.save();
@@ -32,15 +36,24 @@ async function save() {
   setTimeout(() => $saved.set(false), 2000);
 }
 
-export const setAdbMode = (v: 'auto' | 'builtin') => $adbMode.set(v);
 export const setCustomAdbPath = (v: string) => $customAdbPath.set(v);
+export const setUseSystemAdb = (v: boolean) => $useSystemAdb.set(v);
+export const setUseBuiltinAdb = (v: boolean) => $useBuiltinAdb.set(v);
 export const setKillAdbOnExit = (v: boolean) => $killAdbOnExit.set(v);
 
 export function useAppSettings() {
-  const adbMode = useStore($adbMode);
   const customAdbPath = useStore($customAdbPath);
+  const useSystemAdb = useStore($useSystemAdb);
+  const useBuiltinAdb = useStore($useBuiltinAdb);
   const killAdbOnExit = useStore($killAdbOnExit);
   const saved = useStore($saved);
 
-  return { adbMode, customAdbPath, killAdbOnExit, save, saved };
+  return {
+    customAdbPath,
+    useSystemAdb,
+    useBuiltinAdb,
+    killAdbOnExit,
+    save,
+    saved,
+  };
 }

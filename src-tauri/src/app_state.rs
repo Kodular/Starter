@@ -1,9 +1,9 @@
 use crate::{
-    adb::{AdbConnectionStrategy, AdbState, resolve_adb_strategy},
+    adb::{AdbConnectionStrategy, AdbState, kill_adb_server, resolve_adb_strategy},
     app_settings::AppSettings,
 };
 use serde::Serialize;
-use std::sync::Mutex;
+use std::{path::PathBuf, sync::Mutex};
 
 #[derive(Serialize, Clone, PartialEq)]
 #[serde(tag = "status", content = "message")]
@@ -18,6 +18,7 @@ pub struct AppStateInner {
     pub adb_state: AdbState,
     pub local_server_status: LocalServerStatus,
     pub resolved_adb_strategy: AdbConnectionStrategy,
+    pub adb_server_started_by_app: Option<PathBuf>,
 }
 
 impl AppStateInner {
@@ -28,6 +29,7 @@ impl AppStateInner {
             adb_state: AdbState::Initialising,
             local_server_status: LocalServerStatus::Starting,
             resolved_adb_strategy,
+            adb_server_started_by_app: None,
         }
     }
 
@@ -39,6 +41,12 @@ impl AppStateInner {
                 self.resolved_adb_strategy,
                 new_strategy
             );
+            if self.resolved_adb_strategy.is_server_backed() && !new_strategy.is_server_backed() {
+                if let Some(adb_path) = self.adb_server_started_by_app.take() {
+                    log::info!("Killing ADB server started by this app because strategy changed");
+                    kill_adb_server(&adb_path);
+                }
+            }
             self.resolved_adb_strategy = new_strategy;
         }
     }

@@ -2,8 +2,11 @@ use super::types::{AdbConnectionStrategy, CompanionStatus, DeviceInfo};
 use adb_client::{
     ADBDeviceExt, server::ADBServer, server_device::ADBServerDevice, usb::ADBUSBDevice,
 };
-use std::io::Write;
-use std::net::{Ipv4Addr, SocketAddrV4};
+use std::{
+    io::Write,
+    net::{Ipv4Addr, SocketAddrV4, TcpStream},
+    path::Path,
+};
 
 const COMPANION_PKG_NAME: &str = "io.makeroid.companion";
 const ADB_SERVER_ADDR: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 5037);
@@ -27,25 +30,42 @@ impl AdbDevice {
     }
 }
 
-fn try_system_adb(adb_path: Option<String>) -> Option<AdbDevice> {
-    let mut server = ADBServer::new_from_path(ADB_SERVER_ADDR, adb_path);
+fn is_adb_server_running() -> bool {
+    TcpStream::connect(ADB_SERVER_ADDR).is_ok()
+}
+
+fn try_system_adb(adb_path: &Path) -> Option<(AdbDevice, bool)> {
+    let server_running = is_adb_server_running();
+    let mut server = ADBServer::new_from_path(
+        ADB_SERVER_ADDR,
+        Some(adb_path.to_string_lossy().into_owned()),
+    );
     if server.version().is_err() {
         return None;
     }
     let device = ADBServerDevice::autodetect(Some(ADB_SERVER_ADDR));
-    Some(AdbDevice::Server(device))
+    Some((AdbDevice::Server(device), !server_running))
 }
 
 /// Get the connected ADB device based on the resolved connection strategy.
-pub fn get_connected_device(strategy: &AdbConnectionStrategy) -> Option<AdbDevice> {
+pub fn get_connected_device(
+    strategy: &AdbConnectionStrategy,
+) -> Option<(AdbDevice, Option<std::path::PathBuf>)> {
     match strategy {
-        AdbConnectionStrategy::PreferSystemAdb { adb_path } => {
-            let path = adb_path.as_ref().map(|p| p.to_string_lossy().into_owned());
-            try_system_adb(path).or_else(|| ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb))
-        }
-        AdbConnectionStrategy::BuiltinUsbOnly => {
-            ADBUSBDevice::autodetect().ok().map(AdbDevice::Usb)
-        }
+        AdbConnectionStrategy::CustomAdb { adb_path }
+        | AdbConnectionStrategy::SystemAdb { adb_path } => try_system_adb(adb_path)
+            .map(|(device, started)| (device, started.then(|| adb_path.clone())))
+            .or_else(|| {
+                ADBUSBDevice::autodetect()
+                    .ok()
+                    .map(AdbDevice::Usb)
+                    .map(|dev| (dev, None))
+            }),
+        AdbConnectionStrategy::BuiltinUsb => ADBUSBDevice::autodetect()
+            .ok()
+            .map(AdbDevice::Usb)
+            .map(|dev| (dev, None)),
+        AdbConnectionStrategy::Unavailable { .. } => None,
     }
 }
 
