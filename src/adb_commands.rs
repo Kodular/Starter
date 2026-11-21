@@ -155,7 +155,7 @@ pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
         tracing::info!(serial = device_serial, "starting companion app");
         if let Err(err) = device.shell_command(
             &format!(
-                "am start -a android.intent.action.MAIN -n {}/.Screen1 --ez rundirect true",
+                "am start -a android.intent.action.VIEW -n {}/.Screen1 --ez rundirect true",
                 COMPANION_PKG_NAME
             ),
             Some(&mut stdout()),
