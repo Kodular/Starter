@@ -16,6 +16,8 @@ pub(crate) struct DeviceInfo {
     pub(crate) model: String,
     pub(crate) android_version: String,
     pub(crate) sdk_version: String,
+    /// `versionName` of the Kodular Companion app, or `None` if it isn't installed.
+    pub(crate) companion_version: Option<String>,
 }
 
 const COMPANION_PKG_NAME: &str = "io.makeroid.companion";
@@ -32,16 +34,32 @@ pub(crate) fn get_connected_device() -> Option<ADBUSBDevice> {
     }
 }
 
-fn getprop_from_device(device: &mut ADBUSBDevice, property: &str) -> Option<String> {
+fn shell_output(device: &mut ADBUSBDevice, command: &str) -> Option<String> {
     let mut buf: Vec<u8> = Vec::new();
+    device.shell_command(&command, Some(&mut buf), None).ok()?;
+    from_utf8(&buf).ok().map(|data| data.trim().to_string())
+}
 
-    match device.shell_command(&format!("getprop {}", property), Some(&mut buf), None) {
-        Ok(..) => match from_utf8(buf.as_slice()) {
-            Ok(data) => Some(data.trim().to_string()),
-            Err(..) => None,
-        },
-        Err(..) => None,
-    }
+fn getprop_from_device(device: &mut ADBUSBDevice, property: &str) -> Option<String> {
+    shell_output(device, &format!("getprop {property}"))
+}
+
+/// Returns the installed Kodular Companion's version name, or `None` if it isn't installed.
+pub(crate) fn get_companion_version(device: &mut ADBUSBDevice) -> Option<String> {
+    let output = shell_output(
+        device,
+        &format!("dumpsys package {COMPANION_PKG_NAME} | grep -m1 versionName="),
+    )?;
+    parse_version_name(&output)
+}
+
+fn parse_version_name(dumpsys: &str) -> Option<String> {
+    dumpsys
+        .lines()
+        .find_map(|line| line.trim().strip_prefix("versionName="))
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
+        .map(str::to_string)
 }
 
 pub(crate) fn get_device_serial(device: &mut ADBUSBDevice) -> Option<String> {
@@ -72,6 +90,7 @@ pub(crate) fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, (
             model,
             android_version,
             sdk_version,
+            companion_version: get_companion_version(device),
         });
     }
     Err(())
@@ -107,6 +126,13 @@ pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_parse_version_name() {
+        assert_eq!(parse_version_name("    versionName=2.71.1\n"), Some("2.71.1".into()));
+        assert_eq!(parse_version_name(""), None);
+        assert_eq!(parse_version_name("Unable to find package: io.makeroid.companion"), None);
+    }
 
     #[test]
     fn test_get_device_info() {
