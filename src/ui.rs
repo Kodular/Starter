@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use gpui_kit::component::description_list::DescriptionList;
-use gpui_kit::component::group_box::{GroupBox, GroupBoxVariants as _};
+use gpui_kit::component::group_box::GroupBox;
 use gpui_kit::component::link::Link;
 use gpui_kit::component::tag::Tag;
 use gpui_kit::component::{ActiveTheme as _, h_flex, v_flex};
@@ -100,7 +100,7 @@ impl Render for StarterView {
                     }
                 ))
                 .child(
-                    GroupBox::new().outline().title("Device Info").child(
+                    GroupBox::new().title("Device Info").child(
                         DescriptionList::horizontal()
                             .columns(1)
                             .item("Serial No", info.serial_no.clone(), 1)
