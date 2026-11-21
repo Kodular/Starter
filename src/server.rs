@@ -1,4 +1,4 @@
-use crate::adb_commands::{get_connected_device, get_device_serial, start_companion};
+use crate::adb_commands::{get_connected_device_with_serial, start_companion};
 use axum::extract::{Path, Request};
 use axum::http::header::{CONTENT_TYPE, ORIGIN};
 use axum::http::{HeaderValue, Method};
@@ -74,12 +74,10 @@ async fn ping() -> impl IntoResponse {
 }
 
 async fn device_connection_status() -> impl IntoResponse {
-    if let Some(mut device) = get_connected_device()
-        && let Some(serial) = get_device_serial(&mut device)
-    {
-        return Json(json!({ "status": "OK", "version": VERSION, "device": serial }));
+    match get_connected_device_with_serial() {
+        Some((_, serial)) => Json(json!({ "status": "OK", "version": VERSION, "device": serial })),
+        None => Json(json!({ "status": "NO", "version": VERSION })),
     }
-    Json(json!({ "status": "NO", "version": VERSION }))
 }
 
 async fn launch_companion_app_on_device(Path(deviceid): Path<String>) -> impl IntoResponse {

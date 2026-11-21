@@ -59,8 +59,15 @@ fn parse_companion_version(dumpsys: &str) -> Option<String> {
     })
 }
 
-pub(crate) fn get_device_serial(device: &mut ADBUSBDevice) -> Option<String> {
+fn get_device_serial(device: &mut ADBUSBDevice) -> Option<String> {
     getprop_from_device(device, "ro.serialno")
+}
+
+/// The connected USB device together with its serial number.
+pub(crate) fn get_connected_device_with_serial() -> Option<(ADBUSBDevice, String)> {
+    let mut device = get_connected_device()?;
+    let serial = get_device_serial(&mut device)?;
+    Some((device, serial))
 }
 
 /// All device info in one shell round trip: four `getprop` lines (each prints
@@ -93,9 +100,7 @@ fn parse_device_info(output: &str) -> Option<DeviceInfo> {
 }
 
 pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
-    if let Some(mut device) = get_connected_device()
-        && let Some(serial_no) = get_device_serial(&mut device)
-    {
+    if let Some((device, serial_no)) = get_connected_device_with_serial() {
         if serial_no != device_serial {
             tracing::warn!(requested = device_serial, connected = %serial_no, "companion start for a different device");
             return Err(());
@@ -182,10 +187,8 @@ mod tests {
 
     #[test]
     fn test_start_companion() {
-        if let Some(mut device) = get_connected_device() {
-            if let Some(serial_no) = get_device_serial(&mut device) {
-                start_companion(&serial_no).unwrap();
-            }
+        if let Some((_, serial_no)) = get_connected_device_with_serial() {
+            start_companion(&serial_no).unwrap();
         }
     }
 }
