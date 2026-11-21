@@ -10,7 +10,7 @@ use gpui_kit::component::{ActiveTheme as _, h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
-use crate::adb_commands::{DeviceInfo, DeviceTransport, get_connected_device, get_device_info};
+use crate::adb_commands::{DeviceInfo, get_connected_device, get_device_info};
 
 const POLL_INTERVAL: Duration = Duration::from_secs(3);
 const BRAND_COLOR: u32 = 0x4629a0;
@@ -120,13 +120,7 @@ impl Render for StarterView {
         let device_section = match &self.device {
             Some(info) => v_flex()
                 .gap_2()
-                .child(format!(
-                    "Device is connected via {}",
-                    match info.transport {
-                        DeviceTransport::USB => "USB",
-                        DeviceTransport::TCP => "WiFi",
-                    }
-                ))
+                .child("Device is connected via USB")
                 .child(
                     GroupBox::new().title("Device Info").child(
                         DescriptionList::horizontal()

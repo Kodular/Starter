@@ -6403,7 +6403,6 @@ dependencies = [
  "axum",
  "dirs 7.0.0",
  "gpui-kit",
- "serde",
  "serde_json",
  "tokio",
  "tower",
