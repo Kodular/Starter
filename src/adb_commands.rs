@@ -8,7 +8,7 @@ pub(crate) struct DeviceInfo {
     pub(crate) model: String,
     pub(crate) android_version: String,
     pub(crate) sdk_version: String,
-    /// `versionName` of the Kodular Companion app, or `None` if it isn't installed.
+    /// Kodular Companion version as "versionName (versionCode)", or `None` if it isn't installed.
     pub(crate) companion_version: Option<String>,
 }
 
@@ -36,13 +36,27 @@ fn getprop_from_device(device: &mut ADBUSBDevice, property: &str) -> Option<Stri
     shell_output(device, &format!("getprop {property}"))
 }
 
-fn parse_version_name(dumpsys: &str) -> Option<String> {
-    dumpsys
+/// Formats `dumpsys package` output as "versionName (versionCode)".
+///
+/// `versionName=` is on a line of its own; `versionCode=` shares a line with
+/// other fields (`versionCode=42 minSdk=21 targetSdk=34`).
+fn parse_companion_version(dumpsys: &str) -> Option<String> {
+    let field = |key: &str| {
+        dumpsys.lines().find_map(|line| {
+            line.split_whitespace()
+                .find_map(|token| token.strip_prefix(key))
+                .filter(|value| !value.is_empty())
+        })
+    };
+    let name = dumpsys
         .lines()
         .find_map(|line| line.trim().strip_prefix("versionName="))
         .map(str::trim)
-        .filter(|version| !version.is_empty())
-        .map(str::to_string)
+        .filter(|name| !name.is_empty())?;
+    Some(match field("versionCode=") {
+        Some(code) => format!("{name} ({code})"),
+        None => name.to_string(),
+    })
 }
 
 pub(crate) fn get_device_serial(device: &mut ADBUSBDevice) -> Option<String> {
@@ -50,11 +64,11 @@ pub(crate) fn get_device_serial(device: &mut ADBUSBDevice) -> Option<String> {
 }
 
 /// All device info in one shell round trip: four `getprop` lines (each prints
-/// exactly one line, empty if unset), then the companion's `versionName=` line if installed.
+/// exactly one line, empty if unset), then the companion's `versionCode=`/`versionName=` lines if installed.
 pub(crate) fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, ()> {
     let command = format!(
         "getprop ro.serialno; getprop ro.product.model; getprop ro.build.version.release; \
-         getprop ro.build.version.sdk; dumpsys package {COMPANION_PKG_NAME} | grep -m1 versionName="
+         getprop ro.build.version.sdk; dumpsys package {COMPANION_PKG_NAME} | grep -m2 -E 'versionCode=|versionName='"
     );
     let mut buf: Vec<u8> = Vec::new();
     device.shell_command(&command, Some(&mut buf), None).map_err(|_| ())?;
@@ -74,7 +88,7 @@ fn parse_device_info(output: &str) -> Option<DeviceInfo> {
         model,
         android_version,
         sdk_version,
-        companion_version: parse_version_name(&rest.join("\n")),
+        companion_version: parse_companion_version(&rest.join("\n")),
     })
 }
 
@@ -129,10 +143,13 @@ mod tests {
 
     #[test]
     fn test_parse_device_info() {
-        let info = parse_device_info("a9ebc76e\nV2025\n13\n33\n    versionName=2026.05\n").unwrap();
+        let info = parse_device_info(
+            "a9ebc76e\nV2025\n13\n33\n    versionCode=202605 minSdk=21 targetSdk=34\n    versionName=2026.05\n",
+        )
+        .unwrap();
         assert_eq!(info.serial_no, "a9ebc76e");
         assert_eq!(info.sdk_version, "33");
-        assert_eq!(info.companion_version.as_deref(), Some("2026.05"));
+        assert_eq!(info.companion_version.as_deref(), Some("2026.05 (202605)"));
 
         let info = parse_device_info("a9ebc76e\r\nV2025\r\n13\r\n33\r\n").unwrap();
         assert_eq!(info.companion_version, None);
@@ -141,10 +158,14 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_version_name() {
-        assert_eq!(parse_version_name("    versionName=2.71.1\n"), Some("2.71.1".into()));
-        assert_eq!(parse_version_name(""), None);
-        assert_eq!(parse_version_name("Unable to find package: io.makeroid.companion"), None);
+    fn test_parse_companion_version() {
+        assert_eq!(
+            parse_companion_version("    versionCode=271 minSdk=21 targetSdk=34\n    versionName=2.71.1"),
+            Some("2.71.1 (271)".into())
+        );
+        assert_eq!(parse_companion_version("    versionName=2.71.1\n"), Some("2.71.1".into()));
+        assert_eq!(parse_companion_version(""), None);
+        assert_eq!(parse_companion_version("Unable to find package: io.makeroid.companion"), None);
     }
 
     #[test]
