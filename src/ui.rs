@@ -1,5 +1,5 @@
-use std::net::{SocketAddr, TcpStream};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use gpui_kit::component::description_list::DescriptionList;
@@ -16,6 +16,10 @@ const BRAND_COLOR: u32 = 0x4629a0;
 const LOGO_PNG: &[u8] = include_bytes!("../assets/logo.png");
 
 pub struct StarterView {
+    /// Set by the server thread while it is serving.
+    server_flag: Arc<AtomicBool>,
+    /// Port 8004 is held by a program other than Kodular Starter.
+    port_taken: bool,
     server_running: bool,
     device: Option<DeviceInfo>,
     logo: Arc<Image>,
@@ -23,17 +27,17 @@ pub struct StarterView {
 }
 
 impl StarterView {
-    pub fn new(cx: &mut Context<Self>) -> Self {
+    pub fn new(server_flag: Arc<AtomicBool>, port_taken: bool, cx: &mut Context<Self>) -> Self {
         let poll = cx.spawn(async move |this, cx| {
             loop {
-                // adb USB calls and the TCP probe block, so keep them off the UI thread.
-                let (server_running, device) = cx
+                // adb USB calls block, so keep them off the UI thread.
+                let device = cx
                     .background_executor()
-                    .spawn(async { (is_server_running(), read_device_info()) })
+                    .spawn(async { read_device_info() })
                     .await;
 
                 let alive = this.update(cx, |this, cx| {
-                    this.server_running = server_running;
+                    this.server_running = this.server_flag.load(Ordering::Relaxed);
                     this.device = device;
                     cx.notify();
                 });
@@ -46,17 +50,14 @@ impl StarterView {
         });
 
         Self {
-            server_running: false,
+            server_running: server_flag.load(Ordering::Relaxed),
+            server_flag,
+            port_taken,
             device: None,
             logo: Arc::new(Image::from_bytes(ImageFormat::Png, LOGO_PNG.to_vec())),
             _poll: poll,
         }
     }
-}
-
-fn is_server_running() -> bool {
-    let addr = SocketAddr::from(([127, 0, 0, 1], crate::server::PORT));
-    TcpStream::connect_timeout(&addr, Duration::from_millis(500)).is_ok()
 }
 
 fn read_device_info() -> Option<DeviceInfo> {
@@ -83,7 +84,12 @@ impl Render for StarterView {
                     .child(format!("Kodular Starter {}", env!("CARGO_PKG_VERSION"))),
             );
 
-        let server_status = if self.server_running {
+        let server_status = if self.port_taken {
+            Tag::danger().rounded_full().child(format!(
+                "● Port {} is in use by another program",
+                crate::server::PORT
+            ))
+        } else if self.server_running {
             Tag::success().rounded_full().child("● Local server is running")
         } else {
             Tag::danger().rounded_full().child("● Local server is not running")

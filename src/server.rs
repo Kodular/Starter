@@ -4,6 +4,8 @@ use axum::http::header::{CONTENT_TYPE, ORIGIN};
 use axum::http::{HeaderValue, Method};
 use axum::{Json, Router, ServiceExt, response::IntoResponse, routing::get};
 use serde_json::json;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::net::TcpListener;
 use tower::Layer;
 use tower_http::cors::CorsLayer;
@@ -12,7 +14,14 @@ use tower_http::normalize_path::NormalizePathLayer;
 const VERSION: u32 = 2;
 pub(crate) const PORT: u16 = 8004;
 
-pub(crate) async fn launch_server() {
+/// Binds the server port. Done up front so the UI knows right away whether
+/// another program holds it.
+pub(crate) fn bind() -> std::io::Result<std::net::TcpListener> {
+    std::net::TcpListener::bind(("0.0.0.0", PORT))
+}
+
+/// Serves on the listener from [`bind`]. `running` is true while the server is up.
+pub(crate) async fn launch_server(listener: std::net::TcpListener, running: Arc<AtomicBool>) {
     tracing_subscriber::fmt::init();
 
     let router = Router::new()
@@ -36,16 +45,22 @@ pub(crate) async fn launch_server() {
 
     let app = NormalizePathLayer::trim_trailing_slash().layer(router);
 
-    let listener = match TcpListener::bind(("0.0.0.0", PORT)).await {
+    let listener = match listener
+        .set_nonblocking(true)
+        .and_then(|()| TcpListener::from_std(listener))
+    {
         Ok(listener) => listener,
         Err(err) => {
-            eprintln!("Failed to bind local server on port {PORT}: {err}");
+            eprintln!("Failed to start local server on port {PORT}: {err}");
             return;
         }
     };
+
+    running.store(true, Ordering::Relaxed);
     if let Err(err) = axum::serve(listener, ServiceExt::<Request>::into_make_service(app)).await {
         eprintln!("Local server stopped: {err}");
     }
+    running.store(false, Ordering::Relaxed);
 }
 
 async fn index() -> impl IntoResponse {
