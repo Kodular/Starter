@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod adb_commands;
+mod device;
 mod instance;
 mod logging;
 mod server;
@@ -26,17 +27,21 @@ fn main() {
     // Hold the instance lock for the whole process; the OS releases it on exit.
     std::mem::forget(guard);
 
+    // One thread owns the USB device; the server and UI read its snapshot.
+    let device = device::spawn();
+
     // The local HTTP server (axum) needs tokio; GPUI owns the main thread.
     let server_running = Arc::new(AtomicBool::new(false));
     let port_taken = match server::bind() {
         Ok(listener) => {
             let running = server_running.clone();
+            let device = device.clone();
             std::thread::spawn(move || {
                 let runtime = tokio::runtime::Builder::new_multi_thread()
                     .enable_all()
                     .build()
                     .expect("failed to build tokio runtime");
-                runtime.block_on(server::launch_server(listener, running));
+                runtime.block_on(server::launch_server(listener, running, device));
             });
             false
         }
@@ -68,7 +73,7 @@ fn main() {
                 ..Default::default()
             },
             cx,
-            |_, cx| cx.new(|cx| ui::StarterView::new(server_running, port_taken, cx)),
+            |_, cx| cx.new(|cx| ui::StarterView::new(device, server_running, port_taken, cx)),
         )
         .expect("failed to open window");
         cx.activate(true);

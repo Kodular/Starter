@@ -10,9 +10,11 @@ use gpui_kit::component::{ActiveTheme as _, h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
-use crate::adb_commands::{DeviceInfo, refresh_device_info};
+use crate::adb_commands::DeviceInfo;
+use crate::device::DeviceHandle;
 
-const POLL_INTERVAL: Duration = Duration::from_secs(3);
+/// How often the window re-reads the device snapshot and server flag (cheap: no USB).
+const REFRESH_INTERVAL: Duration = Duration::from_millis(500);
 const BRAND_COLOR: u32 = 0x4629a0;
 const LOGO_PNG: &[u8] = include_bytes!("../assets/logo.png");
 
@@ -28,28 +30,28 @@ pub struct StarterView {
 }
 
 impl StarterView {
-    pub fn new(server_flag: Arc<AtomicBool>, port_taken: bool, cx: &mut Context<Self>) -> Self {
+    pub fn new(
+        device: DeviceHandle,
+        server_flag: Arc<AtomicBool>,
+        port_taken: bool,
+        cx: &mut Context<Self>,
+    ) -> Self {
         let poll = cx.spawn(async move |this, cx| {
-            let mut cached: Option<DeviceInfo> = None;
             loop {
-                // adb USB calls block, so keep them off the UI thread.
-                let device = cx
-                    .background_executor()
-                    .spawn(async move { refresh_device_info(cached) })
-                    .await;
-                cached = device.clone();
-
+                let latest = device.current();
                 let alive = this.update(cx, |this, cx| {
-                    this.server_running = this.server_flag.load(Ordering::Relaxed);
-                    log_device_change(this.device.as_ref(), device.as_ref());
-                    this.device = device;
-                    cx.notify();
+                    let running = this.server_flag.load(Ordering::Relaxed);
+                    if this.device != latest || this.server_running != running {
+                        this.device = latest;
+                        this.server_running = running;
+                        cx.notify();
+                    }
                 });
                 if alive.is_err() {
                     break;
                 }
 
-                cx.background_executor().timer(POLL_INTERVAL).await;
+                cx.background_executor().timer(REFRESH_INTERVAL).await;
             }
         });
 
@@ -61,32 +63,6 @@ impl StarterView {
             logo: Arc::new(Image::from_bytes(ImageFormat::Png, LOGO_PNG.to_vec())),
             _poll: poll,
         }
-    }
-}
-
-fn log_device_change(old: Option<&DeviceInfo>, new: Option<&DeviceInfo>) {
-    match (old, new) {
-        (None, Some(info)) => tracing::info!(
-            serial = %info.serial_no,
-            model = %info.model,
-            android = %info.android_version,
-            sdk = %info.sdk_version,
-            companion = info.companion_version.as_deref().unwrap_or("not installed"),
-            "device connected"
-        ),
-        (Some(info), None) => tracing::info!(serial = %info.serial_no, "device disconnected"),
-        (Some(old), Some(new)) if old.serial_no != new.serial_no => tracing::info!(
-            from = %old.serial_no,
-            to = %new.serial_no,
-            "device changed"
-        ),
-        (Some(old), Some(new)) if old.companion_version != new.companion_version => tracing::info!(
-            serial = %new.serial_no,
-            from = old.companion_version.as_deref().unwrap_or("not installed"),
-            to = new.companion_version.as_deref().unwrap_or("not installed"),
-            "companion changed"
-        ),
-        _ => {}
     }
 }
 

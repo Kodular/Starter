@@ -1,5 +1,5 @@
-use crate::adb_commands::{get_connected_device_with_serial, start_companion};
-use axum::extract::{Path, Request};
+use crate::device::DeviceHandle;
+use axum::extract::{Path, Request, State};
 use axum::http::header::{CONTENT_TYPE, ORIGIN};
 use axum::http::{HeaderValue, Method};
 use axum::{Json, Router, ServiceExt, response::IntoResponse, routing::get};
@@ -22,7 +22,11 @@ pub(crate) fn bind() -> std::io::Result<std::net::TcpListener> {
 }
 
 /// Serves on the listener from [`bind`]. `running` is true while the server is up.
-pub(crate) async fn launch_server(listener: std::net::TcpListener, running: Arc<AtomicBool>) {
+pub(crate) async fn launch_server(
+    listener: std::net::TcpListener,
+    running: Arc<AtomicBool>,
+    device: DeviceHandle,
+) {
     let router = Router::new()
         .route("/", get(index))
         .route("/ping", get(ping))
@@ -42,7 +46,8 @@ pub(crate) async fn launch_server(listener: std::net::TcpListener, running: Arc<
                 .allow_headers([ORIGIN, CONTENT_TYPE]),
         )
         // Per-request spans/events at DEBUG; enable with RUST_LOG=tower_http=debug.
-        .layer(TraceLayer::new_for_http());
+        .layer(TraceLayer::new_for_http())
+        .with_state(device);
 
     let app = NormalizePathLayer::trim_trailing_slash().layer(router);
 
@@ -73,14 +78,18 @@ async fn ping() -> impl IntoResponse {
     Json(json!({ "status": "OK", "version": VERSION }))
 }
 
-async fn device_connection_status() -> impl IntoResponse {
-    match get_connected_device_with_serial() {
-        Some((_, serial)) => Json(json!({ "status": "OK", "version": VERSION, "device": serial })),
+/// Answers from the device thread's snapshot; doesn't touch USB.
+async fn device_connection_status(State(device): State<DeviceHandle>) -> impl IntoResponse {
+    match device.current() {
+        Some(info) => Json(json!({ "status": "OK", "version": VERSION, "device": info.serial_no })),
         None => Json(json!({ "status": "NO", "version": VERSION })),
     }
 }
 
-async fn launch_companion_app_on_device(Path(deviceid): Path<String>) -> impl IntoResponse {
-    let _ = start_companion(&deviceid);
+async fn launch_companion_app_on_device(
+    State(device): State<DeviceHandle>,
+    Path(deviceid): Path<String>,
+) -> impl IntoResponse {
+    let _ = device.start_companion(deviceid).await;
     "".into_response()
 }

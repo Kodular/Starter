@@ -1,8 +1,7 @@
 use adb_client::{ADBDeviceExt, usb::ADBUSBDevice};
-use std::io::stdout;
 use std::str::from_utf8;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub(crate) struct DeviceInfo {
     pub(crate) serial_no: String,
     pub(crate) model: String,
@@ -13,6 +12,9 @@ pub(crate) struct DeviceInfo {
 }
 
 const COMPANION_PKG_NAME: &str = "io.makeroid.companion";
+/// Kodular Creator talks to the Companion's REPL on this port; over USB it is
+/// reached through a host -> device forward of the same port.
+const COMPANION_REPL_PORT: u16 = 8001;
 
 pub(crate) fn get_connected_device() -> Option<ADBUSBDevice> {
     let autodetect = ADBUSBDevice::autodetect();
@@ -24,16 +26,6 @@ pub(crate) fn get_connected_device() -> Option<ADBUSBDevice> {
             None
         }
     }
-}
-
-fn shell_output(device: &mut ADBUSBDevice, command: &str) -> Option<String> {
-    let mut buf: Vec<u8> = Vec::new();
-    device.shell_command(command, Some(&mut buf), None).ok()?;
-    from_utf8(&buf).ok().map(|data| data.trim().to_string())
-}
-
-fn getprop_from_device(device: &mut ADBUSBDevice, property: &str) -> Option<String> {
-    shell_output(device, &format!("getprop {property}"))
 }
 
 /// Formats `dumpsys package` output as "versionName (versionCode)".
@@ -59,20 +51,9 @@ fn parse_companion_version(dumpsys: &str) -> Option<String> {
     })
 }
 
-fn get_device_serial(device: &mut ADBUSBDevice) -> Option<String> {
-    getprop_from_device(device, "ro.serialno")
-}
-
-/// The connected USB device together with its serial number.
-pub(crate) fn get_connected_device_with_serial() -> Option<(ADBUSBDevice, String)> {
-    let mut device = get_connected_device()?;
-    let serial = get_device_serial(&mut device)?;
-    Some((device, serial))
-}
-
 /// All device info in one shell round trip: four `getprop` lines (each prints
 /// exactly one line, empty if unset), then the companion's `versionCode=`/`versionName=` lines if installed.
-fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, ()> {
+pub(crate) fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, ()> {
     let command = format!(
         "getprop ro.serialno; getprop ro.product.model; getprop ro.build.version.release; \
          getprop ro.build.version.sdk; dumpsys package {COMPANION_PKG_NAME} | grep -m2 -E 'versionCode=|versionName='"
@@ -87,7 +68,7 @@ fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, ()> {
 /// The parts of the device state that can change while it stays connected:
 /// the serial (to notice a different phone) and the companion version.
 /// One shell round trip; about half the cost of [`get_device_info`].
-fn get_device_status(device: &mut ADBUSBDevice) -> Option<(String, Option<String>)> {
+pub(crate) fn get_device_status(device: &mut ADBUSBDevice) -> Option<(String, Option<String>)> {
     let command = format!(
         "getprop ro.serialno; dumpsys package {COMPANION_PKG_NAME} | grep -m2 -E 'versionCode=|versionName='"
     );
@@ -100,27 +81,6 @@ fn parse_device_status(output: &str) -> Option<(String, Option<String>)> {
     let (serial, rest) = output.split_once('\n').unwrap_or((output, ""));
     let serial = serial.trim();
     (!serial.is_empty()).then(|| (serial.to_string(), parse_companion_version(rest)))
-}
-
-/// Polls the connected device, reusing `cached` when it is still the same phone.
-///
-/// Model, Android and SDK versions can't change while a phone stays connected,
-/// so they are fetched only for a newly connected (or different) device. After
-/// that, each poll only checks the serial and the companion version.
-pub(crate) fn refresh_device_info(cached: Option<DeviceInfo>) -> Option<DeviceInfo> {
-    let mut device = get_connected_device()?;
-    match cached {
-        Some(mut info) => {
-            let (serial, companion_version) = get_device_status(&mut device)?;
-            if serial == info.serial_no {
-                info.companion_version = companion_version;
-                Some(info)
-            } else {
-                get_device_info(&mut device).ok()
-            }
-        }
-        None => get_device_info(&mut device).ok(),
-    }
 }
 
 fn parse_device_info(output: &str) -> Option<DeviceInfo> {
@@ -145,33 +105,32 @@ fn parse_device_info(output: &str) -> Option<DeviceInfo> {
     })
 }
 
-pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
-    if let Some((device, serial_no)) = get_connected_device_with_serial() {
-        if serial_no != device_serial {
-            tracing::warn!(requested = device_serial, connected = %serial_no, "companion start for a different device");
-            return Err(());
-        }
+/// Forwards the Companion REPL port and launches the Companion in REPL mode.
+///
+/// On a direct USB connection the forward is relayed by `device` itself, so it
+/// only lasts while that handle stays alive (see [`crate::device`]).
+pub(crate) fn launch_companion(device: &ADBUSBDevice) -> Result<(), ()> {
+    let port = format!("tcp:{COMPANION_REPL_PORT}");
+    match device.forward(&port, &port) {
+        Ok(local) => tracing::info!(local, "forwarding companion port"),
+        // Without the forward Creator can't reach the Companion, but launching it still helps.
+        Err(err) => tracing::error!("failed to forward {port}: {err}"),
+    }
 
-        tracing::info!(serial = device_serial, "starting companion app");
-        if let Err(err) = device.shell_command(
-            &format!(
-                "am start -a android.intent.action.MAIN -n {}/.Screen1 --ez rundirect true",
-                COMPANION_PKG_NAME
-            ),
-            Some(&mut stdout()),
-            None,
-        ) {
-            tracing::error!(
-                serial = device_serial,
-                "failed to start companion app: {err}"
-            );
-            return Err(());
-        }
-    } else {
-        tracing::warn!(
-            requested = device_serial,
-            "companion start requested but no device found"
-        );
+    // Kodular Companion's Screen1 only declares a MAIN intent filter; Android 13+
+    // rejects other actions even for explicit intents.
+    let command = format!(
+        "am start -a android.intent.action.MAIN -n {COMPANION_PKG_NAME}/.Screen1 --ez rundirect true"
+    );
+    let mut output = Vec::new();
+    if let Err(err) = device.shell_command(&command, Some(&mut output), None) {
+        tracing::error!("failed to start companion app: {err}");
+        return Err(());
+    }
+    let output = String::from_utf8_lossy(&output);
+    if output.contains("Error") {
+        tracing::error!(output = %output.trim(), "failed to start companion app");
+        return Err(());
     }
     Ok(())
 }
@@ -184,7 +143,7 @@ mod tests {
     #[ignore = "needs a USB device"]
     fn bench_device_info() {
         use std::time::{Duration, Instant};
-        const RUNS: u32 = 20;
+        const RUNS: usize = 20;
 
         let mut device = get_connected_device().expect("no device");
         let mut time = |name: &str, f: &mut dyn FnMut(&mut ADBUSBDevice)| {
@@ -197,7 +156,7 @@ mod tests {
                 })
                 .collect();
             samples.sort();
-            println!("{name:<20} median {:?}", samples[RUNS as usize / 2]);
+            println!("{name:<20} median {:?}", samples[RUNS / 2]);
         };
 
         time("get_device_info", &mut |d| {
@@ -206,29 +165,6 @@ mod tests {
         time("get_device_status", &mut |d| {
             get_device_status(d).unwrap();
         });
-
-        // Full poll as the UI does it, including USB detect + auth.
-        let info = get_device_info(&mut device).unwrap();
-        drop(device);
-        let poll = |cached: Option<DeviceInfo>| {
-            let t = Instant::now();
-            refresh_device_info(cached).unwrap();
-            t.elapsed()
-        };
-        let mut first: Vec<Duration> = (0..RUNS).map(|_| poll(None)).collect();
-        let mut steady: Vec<Duration> = (0..RUNS).map(|_| poll(Some(info.clone()))).collect();
-        first.sort();
-        steady.sort();
-        println!(
-            "{:<20} median {:?}",
-            "poll (connect)",
-            first[RUNS as usize / 2]
-        );
-        println!(
-            "{:<20} median {:?}",
-            "poll (steady)",
-            steady[RUNS as usize / 2]
-        );
     }
 
     #[test]
@@ -286,21 +222,21 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs a USB device"]
     fn test_get_device_info() {
-        if let Some(mut device) = get_connected_device()
-            && let Ok(device_info) = get_device_info(&mut device)
-        {
-            println!("Serial No: {:?}", device_info.serial_no);
-            println!("Model: {:?}", device_info.model);
-            println!("Android Version: {:?}", device_info.android_version);
-            println!("SDK Version: {:?}", device_info.sdk_version);
-        }
+        let mut device = get_connected_device().expect("no device");
+        let info = get_device_info(&mut device).unwrap();
+        println!("Serial No: {:?}", info.serial_no);
+        println!("Model: {:?}", info.model);
+        println!("Android Version: {:?}", info.android_version);
+        println!("SDK Version: {:?}", info.sdk_version);
+        println!("Companion: {:?}", info.companion_version);
     }
 
     #[test]
-    fn test_start_companion() {
-        if let Some((_, serial_no)) = get_connected_device_with_serial() {
-            start_companion(&serial_no).unwrap();
-        }
+    #[ignore = "needs a USB device; launches the Companion"]
+    fn test_launch_companion() {
+        let device = get_connected_device().expect("no device");
+        launch_companion(&device).unwrap();
     }
 }
