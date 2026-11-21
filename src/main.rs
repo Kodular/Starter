@@ -3,6 +3,7 @@
 
 mod adb_commands;
 mod instance;
+mod logging;
 mod server;
 mod ui;
 
@@ -13,6 +14,8 @@ use gpui_kit::*;
 use instance::Startup;
 
 fn main() {
+    logging::init();
+
     let guard = match instance::claim() {
         Startup::Primary(guard) => guard,
         Startup::AlreadyRunning => return,
@@ -38,7 +41,7 @@ fn main() {
             false
         }
         Err(err) => {
-            eprintln!("Port {} is unavailable: {err}", server::PORT);
+            tracing::error!("port {} is unavailable: {err}", server::PORT);
             true
         }
     };

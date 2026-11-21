@@ -7,6 +7,7 @@ use gpui_kit::component::group_box::GroupBox;
 use gpui_kit::component::link::Link;
 use gpui_kit::component::tag::Tag;
 use gpui_kit::component::{ActiveTheme as _, h_flex, v_flex};
+use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use crate::adb_commands::{DeviceInfo, DeviceTransport, get_connected_device, get_device_info};
@@ -38,6 +39,7 @@ impl StarterView {
 
                 let alive = this.update(cx, |this, cx| {
                     this.server_running = this.server_flag.load(Ordering::Relaxed);
+                    log_device_change(this.device.as_ref(), device.as_ref());
                     this.device = device;
                     cx.notify();
                 });
@@ -57,6 +59,25 @@ impl StarterView {
             logo: Arc::new(Image::from_bytes(ImageFormat::Png, LOGO_PNG.to_vec())),
             _poll: poll,
         }
+    }
+}
+
+fn log_device_change(old: Option<&DeviceInfo>, new: Option<&DeviceInfo>) {
+    match (old, new) {
+        (None, Some(info)) => tracing::info!(
+            serial = %info.serial_no,
+            model = %info.model,
+            android = %info.android_version,
+            sdk = %info.sdk_version,
+            "device connected"
+        ),
+        (Some(info), None) => tracing::info!(serial = %info.serial_no, "device disconnected"),
+        (Some(old), Some(new)) if old.serial_no != new.serial_no => tracing::info!(
+            from = %old.serial_no,
+            to = %new.serial_no,
+            "device changed"
+        ),
+        _ => {}
     }
 }
 
@@ -144,7 +165,17 @@ impl Render for StarterView {
                 Link::new("source")
                     .href("https://github.com/Kodular/Starter")
                     .child("Source Code"),
-            );
+            )
+            .when_some(crate::logging::log_dir(), |this, dir| {
+                this.child(
+                    Link::new("logs")
+                        .on_click(move |_, _, cx| {
+                            let _ = std::fs::create_dir_all(&dir);
+                            cx.open_with_system(&dir);
+                        })
+                        .child("Logs"),
+                )
+            });
 
         v_flex()
             .size_full()

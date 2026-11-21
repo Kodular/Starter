@@ -60,18 +60,19 @@ pub fn claim() -> Startup {
             Ok(()) => Startup::Primary(InstanceGuard { _lock: Some(file) }),
             Err(fs::TryLockError::WouldBlock) => {
                 // Even if the running instance can't be reached, don't start a second one.
+                tracing::info!("another instance is running; asking it to come to the front");
                 if !request_focus() {
-                    eprintln!("Kodular Starter is already running.");
+                    tracing::warn!("already running, but the running instance did not respond");
                 }
                 Startup::AlreadyRunning
             }
             Err(fs::TryLockError::Error(err)) => {
-                eprintln!("Single-instance lock unavailable: {err}");
+                tracing::warn!("single-instance lock unavailable: {err}");
                 Startup::Primary(InstanceGuard { _lock: None })
             }
         },
         Err(err) => {
-            eprintln!("Single-instance lock unavailable: {err}");
+            tracing::warn!("single-instance lock unavailable: {err}");
             Startup::Primary(InstanceGuard { _lock: None })
         }
     }

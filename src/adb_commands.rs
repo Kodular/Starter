@@ -24,8 +24,9 @@ pub(crate) fn get_connected_device() -> Option<ADBUSBDevice> {
     let autodetect = ADBUSBDevice::autodetect();
     match autodetect {
         Ok(device) => Some(device),
-        Err(what) => {
-            println!("Error: {:?}", what);
+        Err(err) => {
+            // Expected whenever no phone is plugged in, and polled every few seconds.
+            tracing::debug!("no USB device: {err}");
             None
         }
     }
@@ -81,17 +82,24 @@ pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
         && let Some(serial_no) = get_device_serial(&mut device)
     {
         if serial_no != device_serial {
+            tracing::warn!(requested = device_serial, connected = %serial_no, "companion start for a different device");
             return Err(());
         }
 
-        let _ = device.shell_command(
+        tracing::info!(serial = device_serial, "starting companion app");
+        if let Err(err) = device.shell_command(
             &format!(
                 "am start -a android.intent.action.MAIN -n {}/.Screen1 --ez rundirect true",
                 COMPANION_PKG_NAME
             ),
             Some(&mut stdout()),
             None,
-        );
+        ) {
+            tracing::error!(serial = device_serial, "failed to start companion app: {err}");
+            return Err(());
+        }
+    } else {
+        tracing::warn!(requested = device_serial, "companion start requested but no device found");
     }
     Ok(())
 }

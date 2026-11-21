@@ -10,6 +10,7 @@ use tokio::net::TcpListener;
 use tower::Layer;
 use tower_http::cors::CorsLayer;
 use tower_http::normalize_path::NormalizePathLayer;
+use tower_http::trace::TraceLayer;
 
 const VERSION: u32 = 2;
 pub(crate) const PORT: u16 = 8004;
@@ -22,8 +23,6 @@ pub(crate) fn bind() -> std::io::Result<std::net::TcpListener> {
 
 /// Serves on the listener from [`bind`]. `running` is true while the server is up.
 pub(crate) async fn launch_server(listener: std::net::TcpListener, running: Arc<AtomicBool>) {
-    tracing_subscriber::fmt::init();
-
     let router = Router::new()
         .route("/", get(index))
         .route("/ping", get(ping))
@@ -41,7 +40,9 @@ pub(crate) async fn launch_server(listener: std::net::TcpListener, running: Arc<
                 ])
                 .allow_methods([Method::GET])
                 .allow_headers([ORIGIN, CONTENT_TYPE]),
-        );
+        )
+        // Per-request spans/events at DEBUG; enable with RUST_LOG=tower_http=debug.
+        .layer(TraceLayer::new_for_http());
 
     let app = NormalizePathLayer::trim_trailing_slash().layer(router);
 
@@ -51,14 +52,15 @@ pub(crate) async fn launch_server(listener: std::net::TcpListener, running: Arc<
     {
         Ok(listener) => listener,
         Err(err) => {
-            eprintln!("Failed to start local server on port {PORT}: {err}");
+            tracing::error!("failed to start local server on port {PORT}: {err}");
             return;
         }
     };
 
     running.store(true, Ordering::Relaxed);
+    tracing::info!("local server listening on port {PORT}");
     if let Err(err) = axum::serve(listener, ServiceExt::<Request>::into_make_service(app)).await {
-        eprintln!("Local server stopped: {err}");
+        tracing::error!("local server stopped: {err}");
     }
     running.store(false, Ordering::Relaxed);
 }

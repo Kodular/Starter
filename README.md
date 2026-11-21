@@ -23,3 +23,13 @@ cargo run
 ```
 
 On Linux, install the GPUI and libusb build dependencies first (see `.github/workflows/publish.yml`).
+
+### Logs
+
+Logs rotate daily (last 7 days kept), and the **Logs** link in the app footer opens the folder:
+
+- macOS: `~/Library/Logs/Kodular Starter/`
+- Windows: `%LOCALAPPDATA%\Kodular Starter\logs\`
+- Linux: `~/.local/state/kodular-starter/logs/`
+
+Set `RUST_LOG` for more detail, e.g. `RUST_LOG=debug` or `RUST_LOG=info,tower_http=debug` to log every HTTP request.
