@@ -36,15 +36,6 @@ fn getprop_from_device(device: &mut ADBUSBDevice, property: &str) -> Option<Stri
     shell_output(device, &format!("getprop {property}"))
 }
 
-/// Returns the installed Kodular Companion's version name, or `None` if it isn't installed.
-pub(crate) fn get_companion_version(device: &mut ADBUSBDevice) -> Option<String> {
-    let output = shell_output(
-        device,
-        &format!("dumpsys package {COMPANION_PKG_NAME} | grep -m1 versionName="),
-    )?;
-    parse_version_name(&output)
-}
-
 fn parse_version_name(dumpsys: &str) -> Option<String> {
     dumpsys
         .lines()
@@ -58,33 +49,33 @@ pub(crate) fn get_device_serial(device: &mut ADBUSBDevice) -> Option<String> {
     getprop_from_device(device, "ro.serialno")
 }
 
-pub(crate) fn get_device_model(device: &mut ADBUSBDevice) -> Option<String> {
-    getprop_from_device(device, "ro.product.model")
-}
-
-pub(crate) fn get_device_android_version(device: &mut ADBUSBDevice) -> Option<String> {
-    getprop_from_device(device, "ro.build.version.release")
-}
-
-pub(crate) fn get_device_sdk_version(device: &mut ADBUSBDevice) -> Option<String> {
-    getprop_from_device(device, "ro.build.version.sdk")
-}
-
+/// All device info in one shell round trip: four `getprop` lines (each prints
+/// exactly one line, empty if unset), then the companion's `versionName=` line if installed.
 pub(crate) fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, ()> {
-    if let Some(serial_no) = get_device_serial(device)
-        && let Some(model) = get_device_model(device)
-        && let Some(android_version) = get_device_android_version(device)
-        && let Some(sdk_version) = get_device_sdk_version(device)
-    {
-        return Ok(DeviceInfo {
-            serial_no,
-            model,
-            android_version,
-            sdk_version,
-            companion_version: get_companion_version(device),
-        });
-    }
-    Err(())
+    let command = format!(
+        "getprop ro.serialno; getprop ro.product.model; getprop ro.build.version.release; \
+         getprop ro.build.version.sdk; dumpsys package {COMPANION_PKG_NAME} | grep -m1 versionName="
+    );
+    let mut buf: Vec<u8> = Vec::new();
+    device.shell_command(&command, Some(&mut buf), None).map_err(|_| ())?;
+    parse_device_info(from_utf8(&buf).map_err(|_| ())?).ok_or(())
+}
+
+fn parse_device_info(output: &str) -> Option<DeviceInfo> {
+    let mut lines = output.lines().map(str::trim);
+    let mut prop = || lines.next().filter(|value| !value.is_empty()).map(str::to_string);
+    let serial_no = prop()?;
+    let model = prop()?;
+    let android_version = prop()?;
+    let sdk_version = prop()?;
+    let rest: Vec<&str> = lines.collect();
+    Some(DeviceInfo {
+        serial_no,
+        model,
+        android_version,
+        sdk_version,
+        companion_version: parse_version_name(&rest.join("\n")),
+    })
 }
 
 pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
@@ -117,6 +108,37 @@ pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[ignore = "needs a USB device"]
+    fn bench_device_info() {
+        use std::time::{Duration, Instant};
+        const RUNS: u32 = 20;
+
+        let mut device = get_connected_device().expect("no device");
+        get_device_info(&mut device).unwrap(); // warm-up
+        let total: Duration = (0..RUNS)
+            .map(|_| {
+                let t = Instant::now();
+                get_device_info(&mut device).unwrap();
+                t.elapsed()
+            })
+            .sum();
+        println!("get_device_info mean: {:?}", total / RUNS);
+    }
+
+    #[test]
+    fn test_parse_device_info() {
+        let info = parse_device_info("a9ebc76e\nV2025\n13\n33\n    versionName=2026.05\n").unwrap();
+        assert_eq!(info.serial_no, "a9ebc76e");
+        assert_eq!(info.sdk_version, "33");
+        assert_eq!(info.companion_version.as_deref(), Some("2026.05"));
+
+        let info = parse_device_info("a9ebc76e\r\nV2025\r\n13\r\n33\r\n").unwrap();
+        assert_eq!(info.companion_version, None);
+
+        assert!(parse_device_info("a9ebc76e\n\n13\n33\n").is_none());
+    }
 
     #[test]
     fn test_parse_version_name() {
