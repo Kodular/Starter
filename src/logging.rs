@@ -12,7 +12,9 @@ use std::path::PathBuf;
 
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
 use tracing_subscriber::EnvFilter;
-use tracing_subscriber::fmt;
+use tracing_subscriber::field::RecordFields;
+use tracing_subscriber::fmt::format::{DefaultFields, Writer};
+use tracing_subscriber::fmt::{self, FormatFields};
 use tracing_subscriber::prelude::*;
 
 const DEFAULT_FILTER: &str = "info,adb_client=warn";
@@ -46,7 +48,12 @@ pub fn init() {
             .build(dir)
             .ok()
     });
-    let file_layer = file_appender.map(|appender| fmt::layer().with_ansi(false).with_writer(appender));
+    let file_layer = file_appender.map(|appender| {
+        fmt::layer()
+            .with_ansi(false)
+            .fmt_fields(PlainFields::default())
+            .with_writer(appender)
+    });
 
     tracing_subscriber::registry()
         .with(filter)
@@ -70,5 +77,20 @@ pub fn init() {
             "Kodular Starter starting"
         ),
         None => tracing::warn!("no log directory available; logging to stderr only"),
+    }
+}
+
+/// `DefaultFields` under a distinct type.
+///
+/// fmt layers cache each span's formatted fields in the span's extensions,
+/// keyed by the field formatter's type. With both layers on `DefaultFields`,
+/// the file layer would reuse the stderr layer's colored span fields, leaving
+/// ANSI escapes in the log file. A separate type gives it its own plain cache.
+#[derive(Default)]
+struct PlainFields(DefaultFields);
+
+impl<'writer> FormatFields<'writer> for PlainFields {
+    fn format_fields<R: RecordFields>(&self, writer: Writer<'writer>, fields: R) -> std::fmt::Result {
+        self.0.format_fields(writer, fields)
     }
 }
