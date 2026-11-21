@@ -1,0 +1,30 @@
+[package]
+name = "starter"
+version = "3.0.4"
+description = "Kodular Starter"
+edition = "2024"
+
+[dependencies]
+gpui-kit = "0.10.0"
+serde_json = "1"
+axum = "0.8.9"
+tokio = { version = "1.52.2", features = ["full"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+tracing-appender = "0.2.5"
+dirs = "7.0.0"
+tower-http = { version = "0.7.1", features = ["cors", "normalize-path", "trace"] }
+tower = "0.5.3"
+adb_client = { version = "4.0.0", features = ["usb"] }
+
+[package.metadata.packager]
+product-name = "Kodular Starter"
+identifier = "io.kodular.starter"
+icons = ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
