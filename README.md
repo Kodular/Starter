@@ -13,3 +13,13 @@ https://docs.kodular.io/guides/live-development/usb/
 ### Testing
 
 To test the connection, go to https://starter.kodular.io
+
+### Development
+
+Kodular Starter is a native Rust app built with [GPUI Kit](https://gpui-kit.com). It runs a local server on port 8004 that Kodular Creator talks to, and shows the server and USB device status.
+
+```bash
+cargo run
+```
+
+On Linux, install the GPUI and libusb build dependencies first (see `.github/workflows/publish.yml`).

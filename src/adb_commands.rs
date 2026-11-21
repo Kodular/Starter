@@ -3,19 +3,19 @@ use serde::Serialize;
 use std::io::stdout;
 use std::str::from_utf8;
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub(crate) enum DeviceTransport {
     USB,
     TCP,
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub(crate) struct DeviceInfo {
-    transport: DeviceTransport,
-    serial_no: String,
-    model: String,
-    android_version: String,
-    sdk_version: String,
+    pub(crate) transport: DeviceTransport,
+    pub(crate) serial_no: String,
+    pub(crate) model: String,
+    pub(crate) android_version: String,
+    pub(crate) sdk_version: String,
 }
 
 const COMPANION_PKG_NAME: &str = "io.makeroid.companion";

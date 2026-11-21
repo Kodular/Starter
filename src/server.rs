@@ -10,6 +10,7 @@ use tower_http::cors::CorsLayer;
 use tower_http::normalize_path::NormalizePathLayer;
 
 const VERSION: u32 = 2;
+pub(crate) const PORT: u16 = 8004;
 
 pub(crate) async fn launch_server() {
     tracing_subscriber::fmt::init();
@@ -28,9 +29,6 @@ pub(crate) async fn launch_server() {
                     "https://starter.kodular.io".parse::<HeaderValue>().unwrap(),
                     "https://creator.kodular.io".parse::<HeaderValue>().unwrap(),
                     "https://c.kodular.io".parse::<HeaderValue>().unwrap(),
-                    "http://tauri.localhost".parse::<HeaderValue>().unwrap(),
-                    "tauri://localhost".parse::<HeaderValue>().unwrap(),
-                    "http://localhost:1420".parse::<HeaderValue>().unwrap(),
                 ])
                 .allow_methods([Method::GET])
                 .allow_headers([ORIGIN, CONTENT_TYPE]),
@@ -38,10 +36,16 @@ pub(crate) async fn launch_server() {
 
     let app = NormalizePathLayer::trim_trailing_slash().layer(router);
 
-    let listener = TcpListener::bind("0.0.0.0:8004").await.unwrap();
-    axum::serve(listener, ServiceExt::<Request>::into_make_service(app))
-        .await
-        .unwrap();
+    let listener = match TcpListener::bind(("0.0.0.0", PORT)).await {
+        Ok(listener) => listener,
+        Err(err) => {
+            eprintln!("Failed to bind local server on port {PORT}: {err}");
+            return;
+        }
+    };
+    if let Err(err) = axum::serve(listener, ServiceExt::<Request>::into_make_service(app)).await {
+        eprintln!("Local server stopped: {err}");
+    }
 }
 
 async fn index() -> impl IntoResponse {
