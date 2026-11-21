@@ -10,7 +10,7 @@ use gpui_kit::component::{ActiveTheme as _, h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
-use crate::adb_commands::{DeviceInfo, get_connected_device, get_device_info};
+use crate::adb_commands::{DeviceInfo, refresh_device_info};
 
 const POLL_INTERVAL: Duration = Duration::from_secs(3);
 const BRAND_COLOR: u32 = 0x4629a0;
@@ -30,12 +30,14 @@ pub struct StarterView {
 impl StarterView {
     pub fn new(server_flag: Arc<AtomicBool>, port_taken: bool, cx: &mut Context<Self>) -> Self {
         let poll = cx.spawn(async move |this, cx| {
+            let mut cached: Option<DeviceInfo> = None;
             loop {
                 // adb USB calls block, so keep them off the UI thread.
                 let device = cx
                     .background_executor()
-                    .spawn(async { read_device_info() })
+                    .spawn(async move { refresh_device_info(cached) })
                     .await;
+                cached = device.clone();
 
                 let alive = this.update(cx, |this, cx| {
                     this.server_running = this.server_flag.load(Ordering::Relaxed);
@@ -78,12 +80,14 @@ fn log_device_change(old: Option<&DeviceInfo>, new: Option<&DeviceInfo>) {
             to = %new.serial_no,
             "device changed"
         ),
+        (Some(old), Some(new)) if old.companion_version != new.companion_version => tracing::info!(
+            serial = %new.serial_no,
+            from = old.companion_version.as_deref().unwrap_or("not installed"),
+            to = new.companion_version.as_deref().unwrap_or("not installed"),
+            "companion changed"
+        ),
         _ => {}
     }
-}
-
-fn read_device_info() -> Option<DeviceInfo> {
-    get_connected_device().and_then(|mut device| get_device_info(&mut device).ok())
 }
 
 impl Render for StarterView {

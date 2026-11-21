@@ -72,7 +72,7 @@ pub(crate) fn get_connected_device_with_serial() -> Option<(ADBUSBDevice, String
 
 /// All device info in one shell round trip: four `getprop` lines (each prints
 /// exactly one line, empty if unset), then the companion's `versionCode=`/`versionName=` lines if installed.
-pub(crate) fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, ()> {
+fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, ()> {
     let command = format!(
         "getprop ro.serialno; getprop ro.product.model; getprop ro.build.version.release; \
          getprop ro.build.version.sdk; dumpsys package {COMPANION_PKG_NAME} | grep -m2 -E 'versionCode=|versionName='"
@@ -80,6 +80,45 @@ pub(crate) fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, (
     let mut buf: Vec<u8> = Vec::new();
     device.shell_command(&command, Some(&mut buf), None).map_err(|_| ())?;
     parse_device_info(from_utf8(&buf).map_err(|_| ())?).ok_or(())
+}
+
+/// The parts of the device state that can change while it stays connected:
+/// the serial (to notice a different phone) and the companion version.
+/// One shell round trip; about half the cost of [`get_device_info`].
+fn get_device_status(device: &mut ADBUSBDevice) -> Option<(String, Option<String>)> {
+    let command = format!(
+        "getprop ro.serialno; dumpsys package {COMPANION_PKG_NAME} | grep -m2 -E 'versionCode=|versionName='"
+    );
+    let mut buf: Vec<u8> = Vec::new();
+    device.shell_command(&command, Some(&mut buf), None).ok()?;
+    parse_device_status(from_utf8(&buf).ok()?)
+}
+
+fn parse_device_status(output: &str) -> Option<(String, Option<String>)> {
+    let (serial, rest) = output.split_once('\n').unwrap_or((output, ""));
+    let serial = serial.trim();
+    (!serial.is_empty()).then(|| (serial.to_string(), parse_companion_version(rest)))
+}
+
+/// Polls the connected device, reusing `cached` when it is still the same phone.
+///
+/// Model, Android and SDK versions can't change while a phone stays connected,
+/// so they are fetched only for a newly connected (or different) device. After
+/// that, each poll only checks the serial and the companion version.
+pub(crate) fn refresh_device_info(cached: Option<DeviceInfo>) -> Option<DeviceInfo> {
+    let mut device = get_connected_device()?;
+    match cached {
+        Some(mut info) => {
+            let (serial, companion_version) = get_device_status(&mut device)?;
+            if serial == info.serial_no {
+                info.companion_version = companion_version;
+                Some(info)
+            } else {
+                get_device_info(&mut device).ok()
+            }
+        }
+        None => get_device_info(&mut device).ok(),
+    }
 }
 
 fn parse_device_info(output: &str) -> Option<DeviceInfo> {
@@ -135,15 +174,51 @@ mod tests {
         const RUNS: u32 = 20;
 
         let mut device = get_connected_device().expect("no device");
-        get_device_info(&mut device).unwrap(); // warm-up
-        let total: Duration = (0..RUNS)
-            .map(|_| {
-                let t = Instant::now();
-                get_device_info(&mut device).unwrap();
-                t.elapsed()
-            })
-            .sum();
-        println!("get_device_info mean: {:?}", total / RUNS);
+        let mut time = |name: &str, f: &mut dyn FnMut(&mut ADBUSBDevice)| {
+            f(&mut device); // warm-up
+            let mut samples: Vec<Duration> = (0..RUNS)
+                .map(|_| {
+                    let t = Instant::now();
+                    f(&mut device);
+                    t.elapsed()
+                })
+                .collect();
+            samples.sort();
+            println!("{name:<20} median {:?}", samples[RUNS as usize / 2]);
+        };
+
+        time("get_device_info", &mut |d| {
+            get_device_info(d).unwrap();
+        });
+        time("get_device_status", &mut |d| {
+            get_device_status(d).unwrap();
+        });
+
+        // Full poll as the UI does it, including USB detect + auth.
+        let info = get_device_info(&mut device).unwrap();
+        drop(device);
+        let poll = |cached: Option<DeviceInfo>| {
+            let t = Instant::now();
+            refresh_device_info(cached).unwrap();
+            t.elapsed()
+        };
+        let mut first: Vec<Duration> = (0..RUNS).map(|_| poll(None)).collect();
+        let mut steady: Vec<Duration> = (0..RUNS).map(|_| poll(Some(info.clone()))).collect();
+        first.sort();
+        steady.sort();
+        println!("{:<20} median {:?}", "poll (connect)", first[RUNS as usize / 2]);
+        println!("{:<20} median {:?}", "poll (steady)", steady[RUNS as usize / 2]);
+    }
+
+    #[test]
+    fn test_parse_device_status() {
+        assert_eq!(
+            parse_device_status("a9ebc76e\n    versionCode=405 minSdk=21\n    versionName=2026.05\n"),
+            Some(("a9ebc76e".into(), Some("2026.05 (405)".into())))
+        );
+        assert_eq!(parse_device_status("a9ebc76e\r\n"), Some(("a9ebc76e".into(), None)));
+        assert_eq!(parse_device_status("a9ebc76e"), Some(("a9ebc76e".into(), None)));
+        assert_eq!(parse_device_status("\n"), None);
     }
 
     #[test]
