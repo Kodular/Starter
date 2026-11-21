@@ -35,7 +35,8 @@ pub fn log_dir() -> Option<PathBuf> {
 
 /// Installs the global subscriber. Call once, first thing in `main`.
 pub fn init() {
-    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(DEFAULT_FILTER));
+    let filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(DEFAULT_FILTER));
 
     // Writes are blocking (no background worker), so nothing is lost when the
     // app exits via `process::exit` or aborts on panic.
@@ -90,7 +91,11 @@ pub fn init() {
 struct PlainFields(DefaultFields);
 
 impl<'writer> FormatFields<'writer> for PlainFields {
-    fn format_fields<R: RecordFields>(&self, writer: Writer<'writer>, fields: R) -> std::fmt::Result {
+    fn format_fields<R: RecordFields>(
+        &self,
+        writer: Writer<'writer>,
+        fields: R,
+    ) -> std::fmt::Result {
         self.0.format_fields(writer, fields)
     }
 }

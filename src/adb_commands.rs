@@ -28,7 +28,7 @@ pub(crate) fn get_connected_device() -> Option<ADBUSBDevice> {
 
 fn shell_output(device: &mut ADBUSBDevice, command: &str) -> Option<String> {
     let mut buf: Vec<u8> = Vec::new();
-    device.shell_command(&command, Some(&mut buf), None).ok()?;
+    device.shell_command(command, Some(&mut buf), None).ok()?;
     from_utf8(&buf).ok().map(|data| data.trim().to_string())
 }
 
@@ -78,7 +78,9 @@ fn get_device_info(device: &mut ADBUSBDevice) -> Result<DeviceInfo, ()> {
          getprop ro.build.version.sdk; dumpsys package {COMPANION_PKG_NAME} | grep -m2 -E 'versionCode=|versionName='"
     );
     let mut buf: Vec<u8> = Vec::new();
-    device.shell_command(&command, Some(&mut buf), None).map_err(|_| ())?;
+    device
+        .shell_command(&command, Some(&mut buf), None)
+        .map_err(|_| ())?;
     parse_device_info(from_utf8(&buf).map_err(|_| ())?).ok_or(())
 }
 
@@ -123,7 +125,12 @@ pub(crate) fn refresh_device_info(cached: Option<DeviceInfo>) -> Option<DeviceIn
 
 fn parse_device_info(output: &str) -> Option<DeviceInfo> {
     let mut lines = output.lines().map(str::trim);
-    let mut prop = || lines.next().filter(|value| !value.is_empty()).map(str::to_string);
+    let mut prop = || {
+        lines
+            .next()
+            .filter(|value| !value.is_empty())
+            .map(str::to_string)
+    };
     let serial_no = prop()?;
     let model = prop()?;
     let android_version = prop()?;
@@ -154,11 +161,17 @@ pub(crate) fn start_companion(device_serial: &str) -> Result<(), ()> {
             Some(&mut stdout()),
             None,
         ) {
-            tracing::error!(serial = device_serial, "failed to start companion app: {err}");
+            tracing::error!(
+                serial = device_serial,
+                "failed to start companion app: {err}"
+            );
             return Err(());
         }
     } else {
-        tracing::warn!(requested = device_serial, "companion start requested but no device found");
+        tracing::warn!(
+            requested = device_serial,
+            "companion start requested but no device found"
+        );
     }
     Ok(())
 }
@@ -206,18 +219,34 @@ mod tests {
         let mut steady: Vec<Duration> = (0..RUNS).map(|_| poll(Some(info.clone()))).collect();
         first.sort();
         steady.sort();
-        println!("{:<20} median {:?}", "poll (connect)", first[RUNS as usize / 2]);
-        println!("{:<20} median {:?}", "poll (steady)", steady[RUNS as usize / 2]);
+        println!(
+            "{:<20} median {:?}",
+            "poll (connect)",
+            first[RUNS as usize / 2]
+        );
+        println!(
+            "{:<20} median {:?}",
+            "poll (steady)",
+            steady[RUNS as usize / 2]
+        );
     }
 
     #[test]
     fn test_parse_device_status() {
         assert_eq!(
-            parse_device_status("a9ebc76e\n    versionCode=405 minSdk=21\n    versionName=2026.05\n"),
+            parse_device_status(
+                "a9ebc76e\n    versionCode=405 minSdk=21\n    versionName=2026.05\n"
+            ),
             Some(("a9ebc76e".into(), Some("2026.05 (405)".into())))
         );
-        assert_eq!(parse_device_status("a9ebc76e\r\n"), Some(("a9ebc76e".into(), None)));
-        assert_eq!(parse_device_status("a9ebc76e"), Some(("a9ebc76e".into(), None)));
+        assert_eq!(
+            parse_device_status("a9ebc76e\r\n"),
+            Some(("a9ebc76e".into(), None))
+        );
+        assert_eq!(
+            parse_device_status("a9ebc76e"),
+            Some(("a9ebc76e".into(), None))
+        );
         assert_eq!(parse_device_status("\n"), None);
     }
 
@@ -240,23 +269,31 @@ mod tests {
     #[test]
     fn test_parse_companion_version() {
         assert_eq!(
-            parse_companion_version("    versionCode=271 minSdk=21 targetSdk=34\n    versionName=2.71.1"),
+            parse_companion_version(
+                "    versionCode=271 minSdk=21 targetSdk=34\n    versionName=2.71.1"
+            ),
             Some("2.71.1 (271)".into())
         );
-        assert_eq!(parse_companion_version("    versionName=2.71.1\n"), Some("2.71.1".into()));
+        assert_eq!(
+            parse_companion_version("    versionName=2.71.1\n"),
+            Some("2.71.1".into())
+        );
         assert_eq!(parse_companion_version(""), None);
-        assert_eq!(parse_companion_version("Unable to find package: io.makeroid.companion"), None);
+        assert_eq!(
+            parse_companion_version("Unable to find package: io.makeroid.companion"),
+            None
+        );
     }
 
     #[test]
     fn test_get_device_info() {
-        if let Some(mut device) = get_connected_device() {
-            if let Ok(device_info) = get_device_info(&mut device) {
-                println!("Serial No: {:?}", device_info.serial_no);
-                println!("Model: {:?}", device_info.model);
-                println!("Android Version: {:?}", device_info.android_version);
-                println!("SDK Version: {:?}", device_info.sdk_version);
-            }
+        if let Some(mut device) = get_connected_device()
+            && let Ok(device_info) = get_device_info(&mut device)
+        {
+            println!("Serial No: {:?}", device_info.serial_no);
+            println!("Model: {:?}", device_info.model);
+            println!("Android Version: {:?}", device_info.android_version);
+            println!("SDK Version: {:?}", device_info.sdk_version);
         }
     }
 

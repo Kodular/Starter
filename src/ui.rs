@@ -116,32 +116,33 @@ impl Render for StarterView {
                 crate::server::PORT
             ))
         } else if self.server_running {
-            Tag::success().rounded_full().child("● Local server is running")
+            Tag::success()
+                .rounded_full()
+                .child("● Local server is running")
         } else {
-            Tag::danger().rounded_full().child("● Local server is not running")
+            Tag::danger()
+                .rounded_full()
+                .child("● Local server is not running")
         };
 
         let device_section = match &self.device {
-            Some(info) => v_flex()
-                .gap_2()
-                .child("Device is connected via USB")
-                .child(
-                    GroupBox::new().title("Device Info").child(
-                        DescriptionList::horizontal()
-                            .columns(1)
-                            .item("Serial No", info.serial_no.clone(), 1)
-                            .item("Model", info.model.clone(), 1)
-                            .item("Android Version", info.android_version.clone(), 1)
-                            .item("SDK Version", info.sdk_version.clone(), 1)
-                            .item(
-                                "Companion",
-                                info.companion_version
-                                    .clone()
-                                    .unwrap_or_else(|| "Not installed".into()),
-                                1,
-                            ),
-                    ),
+            Some(info) => v_flex().gap_2().child("Device is connected via USB").child(
+                GroupBox::new().title("Device Info").child(
+                    DescriptionList::horizontal()
+                        .columns(1)
+                        .item("Serial No", info.serial_no.clone(), 1)
+                        .item("Model", info.model.clone(), 1)
+                        .item("Android Version", info.android_version.clone(), 1)
+                        .item("SDK Version", info.sdk_version.clone(), 1)
+                        .item(
+                            "Companion",
+                            info.companion_version
+                                .clone()
+                                .unwrap_or_else(|| "Not installed".into()),
+                            1,
+                        ),
                 ),
+            ),
             None => v_flex().child("Connect your device via USB to see device info"),
         };
 
